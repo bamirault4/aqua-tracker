@@ -1,22 +1,185 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
-const STORAGE_KEY = "aquatracker-peabody-v2";
+const supabase = createClient(
+  "https://ybbtqkvxglsucoxqglml.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliYnRxa3Z4Z2xzdWNveHFnbG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTExMDcsImV4cCI6MjA4ODMyNzEwN30.B1YXuce-Wu6pLG6Tk-Eo2bgyvePaKnQ6lu2DfLtMlHM"
+);
 
-const SEED_DATA = {
-  swimmers: [{"id":1,"name":"Dylan Wellington","age":16,"specialty":"Freestyle"},{"id":2,"name":"Ambrose Teague","age":16,"specialty":"Freestyle"},{"id":3,"name":"Aiden Cusick","age":16,"specialty":"Freestyle"},{"id":4,"name":"Harrys Yankam","age":16,"specialty":"Freestyle"},{"id":5,"name":"Caden Medeiros","age":16,"specialty":"Freestyle"},{"id":6,"name":"Mia Koulopoulos","age":16,"specialty":"Freestyle"},{"id":7,"name":"Justin Nelson","age":16,"specialty":"Freestyle"},{"id":8,"name":"Charlie Wise","age":16,"specialty":"Freestyle"},{"id":9,"name":"Melanie Bradley","age":16,"specialty":"Freestyle"},{"id":10,"name":"Megan Eaton","age":16,"specialty":"Freestyle"},{"id":11,"name":"Patrick Conners","age":16,"specialty":"Freestyle"},{"id":12,"name":"Adelaide Teague","age":16,"specialty":"Freestyle"},{"id":13,"name":"Laque Joseph","age":16,"specialty":"Freestyle"},{"id":14,"name":"Karley O'Connor","age":16,"specialty":"Freestyle"},{"id":15,"name":"Seana Kane","age":16,"specialty":"Freestyle"},{"id":16,"name":"Lillian Brokvist","age":16,"specialty":"Freestyle"},{"id":17,"name":"Elizabeth Olson","age":16,"specialty":"Freestyle"},{"id":18,"name":"Nunez Jesiah","age":16,"specialty":"Freestyle"},{"id":19,"name":"Abigail Troisi","age":16,"specialty":"Freestyle"},{"id":20,"name":"Nell Russell","age":16,"specialty":"Freestyle"},{"id":21,"name":"Mason Gadea","age":16,"specialty":"Freestyle"},{"id":22,"name":"Daria Alic","age":16,"specialty":"Freestyle"},{"id":23,"name":"Charlotte Franco","age":16,"specialty":"Freestyle"},{"id":24,"name":"Megan Burke","age":16,"specialty":"Freestyle"},{"id":25,"name":"Vinaja Allen","age":16,"specialty":"Freestyle"},{"id":26,"name":"Kamille Suplice","age":16,"specialty":"Freestyle"},{"id":27,"name":"Isaiah Mwangi","age":16,"specialty":"Freestyle"}],
-  meets: [
-    { id: 1, name: "Gloucester",  season: "2024-25" },
-    { id: 2, name: "Swampscott",  season: "2024-25" },
-    { id: 3, name: "Danvers",     season: "2024-25" },
-    { id: 4, name: "Masco",       season: "2024-25" },
-    { id: 5, name: "Salem",       season: "2024-25" },
-    { id: 6, name: "Marblehead",  season: "2024-25" },
-  ],
-  times: [{"id":1,"swimmerId":1,"event":"500y Free","time":366.56,"date":"2024-10-01","meet":"Gloucester"},{"id":2,"swimmerId":1,"event":"500y Free","time":369.76,"date":"2024-10-01","meet":"Swampscott"},{"id":3,"swimmerId":2,"event":"50y Free","time":25.25,"date":"2024-10-01","meet":"Masco"},{"id":4,"swimmerId":2,"event":"50y Free","time":25.53,"date":"2024-10-01","meet":"Danvers"},{"id":5,"swimmerId":3,"event":"50y Free","time":25.67,"date":"2024-10-01","meet":"Gloucester"},{"id":6,"swimmerId":1,"event":"50y Free","time":25.89,"date":"2024-10-01","meet":"Gloucester"},{"id":7,"swimmerId":3,"event":"50y Free","time":25.97,"date":"2024-10-01","meet":"Masco"},{"id":8,"swimmerId":3,"event":"50y Free","time":26.13,"date":"2024-10-01","meet":"Swampscott"},{"id":9,"swimmerId":2,"event":"100y Breast","time":76.94,"date":"2024-10-01","meet":"Gloucester"},{"id":10,"swimmerId":4,"event":"200y IM","time":158.94,"date":"2024-10-01","meet":"Danvers"},{"id":11,"swimmerId":3,"event":"50y Free","time":26.25,"date":"2024-10-01","meet":"Danvers"},{"id":12,"swimmerId":5,"event":"100y Breast","time":85.21,"date":"2024-10-01","meet":"Gloucester"},{"id":13,"swimmerId":6,"event":"100y Back","time":72.47,"date":"2024-10-01","meet":"Gloucester"},{"id":14,"swimmerId":2,"event":"50y Free","time":26.34,"date":"2024-10-01","meet":"Swampscott"},{"id":15,"swimmerId":7,"event":"100y Back","time":79.02,"date":"2024-10-01","meet":"Gloucester"},{"id":16,"swimmerId":8,"event":"200y Free","time":145.53,"date":"2024-10-01","meet":"Gloucester"},{"id":17,"swimmerId":9,"event":"200y Free","time":151.27,"date":"2024-10-01","meet":"Gloucester"},{"id":18,"swimmerId":10,"event":"200y Free","time":161.97,"date":"2024-10-01","meet":"Gloucester"},{"id":19,"swimmerId":6,"event":"200y IM","time":166.6,"date":"2024-10-01","meet":"Gloucester"},{"id":20,"swimmerId":2,"event":"50y Free","time":26.37,"date":"2024-10-01","meet":"Salem"},{"id":21,"swimmerId":8,"event":"100y Fly","time":73.65,"date":"2024-10-01","meet":"Gloucester"},{"id":22,"swimmerId":11,"event":"50y Free","time":26.44,"date":"2024-10-01","meet":"Salem"},{"id":23,"swimmerId":11,"event":"50y Free","time":26.57,"date":"2024-10-01","meet":"Swampscott"},{"id":24,"swimmerId":4,"event":"100y Breast","time":80.44,"date":"2024-10-01","meet":"Danvers"},{"id":25,"swimmerId":11,"event":"50y Free","time":26.72,"date":"2024-10-01","meet":"Danvers"},{"id":26,"swimmerId":12,"event":"100y Back","time":95.81,"date":"2024-10-01","meet":"Gloucester"},{"id":27,"swimmerId":9,"event":"100y Breast","time":96.32,"date":"2024-10-01","meet":"Gloucester"},{"id":28,"swimmerId":11,"event":"50y Free","time":26.73,"date":"2024-10-01","meet":"Masco"},{"id":29,"swimmerId":3,"event":"50y Free","time":26.82,"date":"2024-10-01","meet":"Marblehead"},{"id":30,"swimmerId":6,"event":"50y Back","time":32.9,"date":"2024-10-01","meet":"Gloucester"},{"id":31,"swimmerId":5,"event":"100y Breast","time":90.47,"date":"2024-10-01","meet":"Salem"},{"id":32,"swimmerId":7,"event":"50y Fly","time":30.51,"date":"2024-10-01","meet":"Gloucester"},{"id":33,"swimmerId":11,"event":"50y Free","time":26.84,"date":"2024-10-01","meet":"Gloucester"},{"id":34,"swimmerId":1,"event":"50y Free","time":27.3,"date":"2024-10-01","meet":"Gloucester"},{"id":35,"swimmerId":3,"event":"50y Free","time":27.43,"date":"2024-10-01","meet":"Salem"},{"id":36,"swimmerId":4,"event":"200y IM","time":150.13,"date":"2024-10-01","meet":"Gloucester"},{"id":37,"swimmerId":11,"event":"50y Free","time":29.85,"date":"2024-10-01","meet":"Marblehead"},{"id":38,"swimmerId":13,"event":"50y Free","time":31.15,"date":"2024-10-01","meet":"Danvers"},{"id":39,"swimmerId":10,"event":"50y Free","time":31.22,"date":"2024-10-01","meet":"Danvers"},{"id":40,"swimmerId":3,"event":"50y Back","time":31.74,"date":"2024-10-01","meet":"Gloucester"},{"id":41,"swimmerId":2,"event":"50y Breast","time":33.13,"date":"2024-10-01","meet":"Gloucester"},{"id":42,"swimmerId":8,"event":"50y Free","time":31.62,"date":"2024-10-01","meet":"Gloucester"},{"id":43,"swimmerId":14,"event":"200y IM","time":201.69,"date":"2024-10-01","meet":"Gloucester"},{"id":44,"swimmerId":4,"event":"100y Fly","time":74.81,"date":"2024-10-01","meet":"Gloucester"},{"id":45,"swimmerId":13,"event":"50y Free","time":32.33,"date":"2024-10-01","meet":"Gloucester"},{"id":46,"swimmerId":15,"event":"100y Fly","time":86.51,"date":"2024-10-01","meet":"Gloucester"},{"id":47,"swimmerId":9,"event":"50y Free","time":32.77,"date":"2024-10-01","meet":"Gloucester"},{"id":48,"swimmerId":5,"event":"100y Breast","time":86.09,"date":"2024-10-01","meet":"Swampscott"},{"id":49,"swimmerId":10,"event":"50y Free","time":33.22,"date":"2024-10-01","meet":"Masco"},{"id":50,"swimmerId":1,"event":"50y Free","time":33.4,"date":"2024-10-01","meet":"Marblehead"},{"id":51,"swimmerId":14,"event":"50y Free","time":34.64,"date":"2024-10-01","meet":"Gloucester"},{"id":52,"swimmerId":13,"event":"50y Free","time":35.78,"date":"2024-10-01","meet":"Salem"},{"id":53,"swimmerId":16,"event":"50y Free","time":36.78,"date":"2024-10-01","meet":"Salem"},{"id":54,"swimmerId":17,"event":"50y Free","time":37.75,"date":"2024-10-01","meet":"Gloucester"},{"id":55,"swimmerId":17,"event":"50y Free","time":37.78,"date":"2024-10-01","meet":"Danvers"},{"id":56,"swimmerId":4,"event":"50y Free","time":29.24,"date":"2024-10-01","meet":"Gloucester"},{"id":57,"swimmerId":2,"event":"100y Breast","time":81.38,"date":"2024-10-01","meet":"Marblehead"},{"id":58,"swimmerId":4,"event":"50y Fly","time":30.46,"date":"2024-10-01","meet":"Gloucester"},{"id":59,"swimmerId":6,"event":"100y Back","time":72.01,"date":"2024-10-01","meet":"Marblehead"},{"id":60,"swimmerId":18,"event":"50y Free","time":38.08,"date":"2024-10-01","meet":"Danvers"},{"id":61,"swimmerId":1,"event":"500y Free","time":370.12,"date":"2024-10-01","meet":"Danvers"},{"id":62,"swimmerId":7,"event":"100y Back","time":83.97,"date":"2024-10-01","meet":"Marblehead"},{"id":63,"swimmerId":15,"event":"100y Back","time":88.19,"date":"2024-10-01","meet":"Marblehead"},{"id":64,"swimmerId":9,"event":"200y Free","time":154.93,"date":"2024-10-01","meet":"Marblehead"},{"id":65,"swimmerId":8,"event":"200y IM","time":164.5,"date":"2024-10-01","meet":"Marblehead"},{"id":66,"swimmerId":13,"event":"50y Free","time":38.09,"date":"2024-10-01","meet":"Masco"},{"id":67,"swimmerId":5,"event":"100y Breast","time":87.78,"date":"2024-10-01","meet":"Masco"},{"id":68,"swimmerId":8,"event":"100y Fly","time":73.44,"date":"2024-10-01","meet":"Marblehead"},{"id":69,"swimmerId":17,"event":"200y Free","time":204.69,"date":"2024-10-01","meet":"Marblehead"},{"id":70,"swimmerId":7,"event":"200y IM","time":178.65,"date":"2024-10-01","meet":"Marblehead"},{"id":71,"swimmerId":6,"event":"100y Fly","time":74.41,"date":"2024-10-01","meet":"Marblehead"},{"id":72,"swimmerId":18,"event":"50y Free","time":38.24,"date":"2024-10-01","meet":"Gloucester"},{"id":73,"swimmerId":19,"event":"100y Back","time":115.33,"date":"2024-10-01","meet":"Marblehead"},{"id":74,"swimmerId":15,"event":"200y IM","time":192.56,"date":"2024-10-01","meet":"Marblehead"},{"id":75,"swimmerId":7,"event":"500y Free","time":375.76,"date":"2024-10-01","meet":"Masco"},{"id":76,"swimmerId":7,"event":"500y Free","time":382.32,"date":"2024-10-01","meet":"Gloucester"},{"id":77,"swimmerId":16,"event":"100y Breast","time":108.02,"date":"2024-10-01","meet":"Marblehead"},{"id":78,"swimmerId":20,"event":"50y Free","time":38.32,"date":"2024-10-01","meet":"Masco"},{"id":79,"swimmerId":18,"event":"50y Free","time":38.96,"date":"2024-10-01","meet":"Masco"},{"id":80,"swimmerId":20,"event":"50y Free","time":39.41,"date":"2024-10-01","meet":"Salem"},{"id":81,"swimmerId":2,"event":"100y Breast","time":77.29,"date":"2024-10-01","meet":"Salem"},{"id":82,"swimmerId":6,"event":"100y Back","time":73.94,"date":"2024-10-01","meet":"Salem"},{"id":83,"swimmerId":4,"event":"100y Fly","time":71.4,"date":"2024-10-01","meet":"Marblehead"},{"id":84,"swimmerId":21,"event":"50y Free","time":39.71,"date":"2024-10-01","meet":"Danvers"},{"id":85,"swimmerId":17,"event":"50y Free","time":39.82,"date":"2024-10-01","meet":"Swampscott"},{"id":86,"swimmerId":7,"event":"500y Free","time":382.44,"date":"2024-10-01","meet":"Danvers"},{"id":87,"swimmerId":8,"event":"100y Fly","time":73.06,"date":"2024-10-01","meet":"Salem"},{"id":88,"swimmerId":5,"event":"100y Breast","time":85.65,"date":"2024-10-01","meet":"Danvers"},{"id":89,"swimmerId":8,"event":"200y Free","time":142.66,"date":"2024-10-01","meet":"Salem"},{"id":90,"swimmerId":15,"event":"200y Free","time":171.0,"date":"2024-10-01","meet":"Salem"},{"id":91,"swimmerId":14,"event":"200y Free","time":180.69,"date":"2024-10-01","meet":"Salem"},{"id":92,"swimmerId":6,"event":"200y IM","time":170.14,"date":"2024-10-01","meet":"Salem"},{"id":93,"swimmerId":4,"event":"100y Breast","time":83.72,"date":"2024-10-01","meet":"Marblehead"},{"id":94,"swimmerId":1,"event":"500y Free","time":387.05,"date":"2024-10-01","meet":"Masco"},{"id":95,"swimmerId":9,"event":"500y Free","time":388.62,"date":"2024-10-01","meet":"Danvers"},{"id":96,"swimmerId":7,"event":"100y Back","time":89.82,"date":"2024-10-01","meet":"Salem"},{"id":97,"swimmerId":14,"event":"100y Breast","time":100.69,"date":"2024-10-01","meet":"Salem"},{"id":98,"swimmerId":19,"event":"50y Free","time":40.58,"date":"2024-10-01","meet":"Swampscott"},{"id":99,"swimmerId":22,"event":"50y Free","time":40.59,"date":"2024-10-01","meet":"Swampscott"},{"id":100,"swimmerId":21,"event":"50y Free","time":41.16,"date":"2024-10-01","meet":"Masco"},{"id":101,"swimmerId":23,"event":"100y Back","time":111.44,"date":"2024-10-01","meet":"Salem"},{"id":102,"swimmerId":22,"event":"50y Free","time":41.78,"date":"2024-10-01","meet":"Salem"},{"id":103,"swimmerId":23,"event":"50y Free","time":42.25,"date":"2024-10-01","meet":"Danvers"},{"id":104,"swimmerId":19,"event":"50y Free","time":42.42,"date":"2024-10-01","meet":"Salem"},{"id":105,"swimmerId":5,"event":"100y Fly","time":94.03,"date":"2024-10-01","meet":"Masco"},{"id":106,"swimmerId":1,"event":"100y Fly","time":76.25,"date":"2024-10-01","meet":"Salem"},{"id":107,"swimmerId":24,"event":"50y Free","time":42.78,"date":"2024-10-01","meet":"Salem"},{"id":108,"swimmerId":21,"event":"50y Free","time":43.03,"date":"2024-10-01","meet":"Swampscott"},{"id":109,"swimmerId":19,"event":"100y Back","time":122.78,"date":"2024-10-01","meet":"Salem"},{"id":110,"swimmerId":17,"event":"100y Breast","time":159.81,"date":"2024-10-01","meet":"Salem"},{"id":111,"swimmerId":25,"event":"50y Free","time":43.63,"date":"2024-10-01","meet":"Gloucester"},{"id":112,"swimmerId":25,"event":"50y Free","time":43.96,"date":"2024-10-01","meet":"Swampscott"},{"id":113,"swimmerId":9,"event":"500y Free","time":398.26,"date":"2024-10-01","meet":"Swampscott"},{"id":114,"swimmerId":23,"event":"50y Free","time":44.09,"date":"2024-10-01","meet":"Masco"},{"id":115,"swimmerId":26,"event":"50y Free","time":44.38,"date":"2024-10-01","meet":"Danvers"},{"id":116,"swimmerId":8,"event":"200y IM","time":160.93,"date":"2024-10-01","meet":"Swampscott"},{"id":117,"swimmerId":4,"event":"200y IM","time":161.38,"date":"2024-10-01","meet":"Masco"},{"id":118,"swimmerId":4,"event":"100y Breast","time":80.32,"date":"2024-10-01","meet":"Masco"},{"id":119,"swimmerId":6,"event":"100y Back","time":72.97,"date":"2024-10-01","meet":"Swampscott"},{"id":120,"swimmerId":8,"event":"100y Fly","time":72.87,"date":"2024-10-01","meet":"Swampscott"},{"id":121,"swimmerId":9,"event":"500y Free","time":403.28,"date":"2024-10-01","meet":"Marblehead"},{"id":122,"swimmerId":1,"event":"200y Free","time":134.14,"date":"2024-10-01","meet":"Swampscott"},{"id":123,"swimmerId":7,"event":"100y Back","time":79.14,"date":"2024-10-01","meet":"Swampscott"},{"id":124,"swimmerId":5,"event":"100y Fly","time":93.44,"date":"2024-10-01","meet":"Danvers"},{"id":125,"swimmerId":9,"event":"200y Free","time":152.38,"date":"2024-10-01","meet":"Swampscott"},{"id":126,"swimmerId":15,"event":"200y Free","time":164.85,"date":"2024-10-01","meet":"Swampscott"},{"id":127,"swimmerId":7,"event":"200y IM","time":176.19,"date":"2024-10-01","meet":"Swampscott"},{"id":128,"swimmerId":1,"event":"500y Free","time":406.09,"date":"2024-10-01","meet":"Salem"},{"id":129,"swimmerId":12,"event":"100y Back","time":100.32,"date":"2024-10-01","meet":"Swampscott"},{"id":130,"swimmerId":6,"event":"100y Fly","time":75.72,"date":"2024-10-01","meet":"Swampscott"},{"id":131,"swimmerId":27,"event":"200y IM","time":193.81,"date":"2024-10-01","meet":"Swampscott"},{"id":132,"swimmerId":14,"event":"100y Breast","time":101.22,"date":"2024-10-01","meet":"Swampscott"},{"id":133,"swimmerId":9,"event":"200y Free","time":156.6,"date":"2024-10-01","meet":"Masco"},{"id":134,"swimmerId":1,"event":"200y Free","time":149.09,"date":"2024-10-01","meet":"Masco"},{"id":135,"swimmerId":10,"event":"200y Free","time":161.46,"date":"2024-10-01","meet":"Masco"},{"id":136,"swimmerId":8,"event":"200y IM","time":163.04,"date":"2024-10-01","meet":"Masco"},{"id":137,"swimmerId":4,"event":"200y IM","time":161.22,"date":"2024-10-01","meet":"Salem"},{"id":138,"swimmerId":15,"event":"200y IM","time":183.9,"date":"2024-10-01","meet":"Masco"},{"id":139,"swimmerId":2,"event":"100y Free","time":56.89,"date":"2024-10-01","meet":"Danvers"},{"id":140,"swimmerId":2,"event":"100y Free","time":57.62,"date":"2024-10-01","meet":"Masco"},{"id":141,"swimmerId":2,"event":"100y Free","time":57.85,"date":"2024-10-01","meet":"Marblehead"},{"id":142,"swimmerId":2,"event":"100y Free","time":58.03,"date":"2024-10-01","meet":"Gloucester"},{"id":143,"swimmerId":2,"event":"100y Free","time":58.15,"date":"2024-10-01","meet":"Swampscott"},{"id":144,"swimmerId":1,"event":"100y Free","time":58.69,"date":"2024-10-01","meet":"Marblehead"},{"id":145,"swimmerId":11,"event":"100y Free","time":62.12,"date":"2024-10-01","meet":"Gloucester"},{"id":146,"swimmerId":11,"event":"100y Free","time":62.18,"date":"2024-10-01","meet":"Masco"},{"id":147,"swimmerId":11,"event":"100y Free","time":63.25,"date":"2024-10-01","meet":"Danvers"},{"id":148,"swimmerId":11,"event":"100y Free","time":65.22,"date":"2024-10-01","meet":"Marblehead"},{"id":149,"swimmerId":6,"event":"100y Fly","time":77.18,"date":"2024-10-01","meet":"Masco"},{"id":150,"swimmerId":8,"event":"100y Fly","time":74.46,"date":"2024-10-01","meet":"Masco"},{"id":151,"swimmerId":5,"event":"100y Free","time":72.15,"date":"2024-10-01","meet":"Marblehead"},{"id":152,"swimmerId":11,"event":"100y Free","time":65.5,"date":"2024-10-01","meet":"Salem"},{"id":153,"swimmerId":11,"event":"100y Free","time":65.76,"date":"2024-10-01","meet":"Swampscott"},{"id":154,"swimmerId":27,"event":"100y Free","time":70.93,"date":"2024-10-01","meet":"Gloucester"},{"id":155,"swimmerId":5,"event":"200y Free","time":172.65,"date":"2024-10-01","meet":"Marblehead"},{"id":156,"swimmerId":7,"event":"500y Free","time":432.1,"date":"2024-10-01","meet":"Salem"},{"id":157,"swimmerId":15,"event":"500y Free","time":441.41,"date":"2024-10-01","meet":"Swampscott"},{"id":158,"swimmerId":19,"event":"100y Back","time":114.83,"date":"2024-10-01","meet":"Masco"},{"id":159,"swimmerId":7,"event":"100y Back","time":80.81,"date":"2024-10-01","meet":"Masco"},{"id":160,"swimmerId":6,"event":"100y Back","time":73.81,"date":"2024-10-01","meet":"Masco"},{"id":161,"swimmerId":12,"event":"100y Back","time":95.46,"date":"2024-10-01","meet":"Masco"},{"id":162,"swimmerId":14,"event":"100y Breast","time":101.5,"date":"2024-10-01","meet":"Masco"},{"id":163,"swimmerId":12,"event":"200y Free","time":180.66,"date":"2024-10-01","meet":"Danvers"},{"id":164,"swimmerId":9,"event":"200y Free","time":149.57,"date":"2024-10-01","meet":"Danvers"},{"id":165,"swimmerId":1,"event":"200y Free","time":135.34,"date":"2024-10-01","meet":"Danvers"},{"id":166,"swimmerId":27,"event":"200y Free","time":166.35,"date":"2024-10-01","meet":"Danvers"},{"id":167,"swimmerId":8,"event":"200y IM","time":160.65,"date":"2024-10-01","meet":"Danvers"},{"id":168,"swimmerId":4,"event":"100y Fly","time":71.02,"date":"2024-10-01","meet":"Swampscott"},{"id":169,"swimmerId":15,"event":"200y IM","time":180.34,"date":"2024-10-01","meet":"Danvers"},{"id":170,"swimmerId":19,"event":"100y Free","time":74.38,"date":"2024-10-01","meet":"Danvers"},{"id":171,"swimmerId":27,"event":"100y Free","time":74.38,"date":"2024-10-01","meet":"Danvers"},{"id":172,"swimmerId":10,"event":"100y Free","time":75.19,"date":"2024-10-01","meet":"Swampscott"},{"id":173,"swimmerId":15,"event":"100y Free","time":77.81,"date":"2024-10-01","meet":"Masco"},{"id":174,"swimmerId":10,"event":"100y Free","time":78.22,"date":"2024-10-01","meet":"Salem"},{"id":175,"swimmerId":20,"event":"100y Free","time":86.5,"date":"2024-10-01","meet":"Gloucester"},{"id":176,"swimmerId":17,"event":"100y Free","time":92.72,"date":"2024-10-01","meet":"Salem"},{"id":177,"swimmerId":8,"event":"100y Fly","time":73.68,"date":"2024-10-01","meet":"Danvers"},{"id":178,"swimmerId":6,"event":"100y Fly","time":76.07,"date":"2024-10-01","meet":"Danvers"},{"id":179,"swimmerId":5,"event":"50y Breast","time":37.05,"date":"2024-10-01","meet":"Gloucester"},{"id":180,"swimmerId":22,"event":"100y Free","time":93.63,"date":"2024-10-01","meet":"Masco"},{"id":181,"swimmerId":19,"event":"100y Free","time":94.71,"date":"2024-10-01","meet":"Gloucester"},{"id":182,"swimmerId":19,"event":"100y Free","time":100.54,"date":"2024-10-01","meet":"Salem"},{"id":183,"swimmerId":15,"event":"500y Free","time":467.42,"date":"2024-10-01","meet":"Salem"},{"id":184,"swimmerId":5,"event":"500y Free","time":488.95,"date":"2024-10-01","meet":"Gloucester"},{"id":185,"swimmerId":1,"event":"500y Free","time":541.34,"date":"2024-10-01","meet":"Marblehead"},{"id":186,"swimmerId":20,"event":"100y Back","time":99.21,"date":"2024-10-01","meet":"Danvers"},{"id":187,"swimmerId":7,"event":"100y Back","time":81.91,"date":"2024-10-01","meet":"Danvers"},{"id":188,"swimmerId":6,"event":"100y Back","time":72.5,"date":"2024-10-01","meet":"Danvers"},{"id":189,"swimmerId":12,"event":"100y Back","time":94.25,"date":"2024-10-01","meet":"Danvers"},{"id":190,"swimmerId":16,"event":"100y Breast","time":107.22,"date":"2024-10-01","meet":"Danvers"},{"id":191,"swimmerId":14,"event":"500y Free","time":565.39,"date":"2024-10-01","meet":"Marblehead"},{"id":192,"swimmerId":4,"event":"100y Breast","time":81.38,"date":"2024-10-01","meet":"Swampscott"},{"id":193,"swimmerId":14,"event":"100y Breast","time":100.87,"date":"2024-10-01","meet":"Danvers"}],
-  events: ["50y Back","50y Breast","50y Fly","50y Free","100y Back","100y Breast","100y Fly","100y Free","200y Free","200y IM","500y Free"],
-  cuts: {}
+// ── EVENT NAME MIGRATION ──
+const EVENT_RENAME_MAP = {
+  "50y Back":"50 Back","50y Breast":"50 Breast","50y Fly":"50 Fly","50y Free":"50 Free",
+  "100y Back":"100 Back","100y Breast":"100 Breast","100y Fly":"100 Fly","100y Free":"100 Free",
+  "200y Free":"200 Free","200y IM":"200 IM","500y Free":"500 Free"
 };
 
+// ── CONSTANTS ──
+const INDIVIDUAL_EVENTS = ["50 Back","50 Breast","50 Fly","50 Free","100 Back","100 Breast","100 Fly","100 Free","200 Free","200 IM","500 Free"];
+const RELAY_EVENTS = ["200 Medley Relay","200 Free Relay","400 Free Relay"];
+const ALL_EVENTS = [...INDIVIDUAL_EVENTS, ...RELAY_EVENTS];
+
+// Meet entry order (individual only — relays handled separately)
+const MEET_EVENT_ORDER = [
+  "200 Free","200 IM","50 Free","100 Fly","100 Free","500 Free","100 Back","100 Breast"
+];
+const ENTRY_ONLY_EVENTS = ["50 Back","50 Breast","50 Fly"]; // individual logging only, not in grid
+
+const RELAY_LEGS = {
+  "200 Medley Relay": [
+    {label:"Back",  event:"50 Back (MR)"},
+    {label:"Breast",event:"50 Breast (MR)"},
+    {label:"Fly",   event:"50 Fly (MR)"},
+    {label:"Free",  event:"50 Free (MR)"},
+  ],
+  "200 Free Relay": [
+    {label:"Leg 1",event:"50 Free (FR)"},
+    {label:"Leg 2",event:"50 Free (FR)"},
+    {label:"Leg 3",event:"50 Free (FR)"},
+    {label:"Leg 4",event:"50 Free (FR)"},
+  ],
+  "400 Free Relay": [
+    {label:"Leg 1",event:"100 Free (FR)"},
+    {label:"Leg 2",event:"100 Free (FR)"},
+    {label:"Leg 3",event:"100 Free (FR)"},
+    {label:"Leg 4",event:"100 Free (FR)"},
+  ],
+};
+
+// Groups relay splits with their base event on swimmer profile
+const RELAY_SPLIT_VARIANTS = {
+  "50 Free":  ["50 Free (MR)","50 Free (FR)"],
+  "50 Back":  ["50 Back (MR)"],
+  "50 Breast":["50 Breast (MR)"],
+  "50 Fly":   ["50 Fly (MR)"],
+  "100 Free": ["100 Free (FR)"],
+};
+
+// Full meet entry order including relays
+const FULL_MEET_ORDER = [
+  {type:"relay",  name:"200 Medley Relay"},
+  {type:"individual", name:"200 Free"},
+  {type:"individual", name:"200 IM"},
+  {type:"individual", name:"50 Free"},
+  {type:"individual", name:"100 Fly"},
+  {type:"individual", name:"100 Free"},
+  {type:"individual", name:"500 Free"},
+  {type:"relay",  name:"200 Free Relay"},
+  {type:"individual", name:"100 Back"},
+  {type:"individual", name:"100 Breast"},
+  {type:"relay",  name:"400 Free Relay"},
+];
+
+// ── YEAR HELPERS ──
+function getCurrentSeniorGradYear() {
+  const now = new Date();
+  return now.getMonth() >= 8 ? now.getFullYear() + 1 : now.getFullYear();
+}
+function gradYearToLabel(gradYear) {
+  if (!gradYear) return "";
+  const diff = Number(gradYear) - getCurrentSeniorGradYear();
+  if (diff === 0) return "SR";
+  if (diff === 1) return "JR";
+  if (diff === 2) return "SO";
+  if (diff === 3) return "FR";
+  if (diff < 0) return "GR";
+  return `'${String(gradYear).slice(2)}`;
+}
+
+// ── SEED DATA ──
+const SEED_SWIMMERS = [
+  {name:"Dylan Wellington",grad_year:2026},{name:"Ambrose Teague",grad_year:2026},
+  {name:"Aiden Cusick",grad_year:2026},{name:"Harrys Yankam",grad_year:2026},
+  {name:"Caden Medeiros",grad_year:2027},{name:"Mia Koulopoulos",grad_year:2027},
+  {name:"Justin Nelson",grad_year:2027},{name:"Charlie Wise",grad_year:2027},
+  {name:"Melanie Bradley",grad_year:2028},{name:"Megan Eaton",grad_year:2028},
+  {name:"Patrick Conners",grad_year:2028},{name:"Adelaide Teague",grad_year:2028},
+  {name:"Laque Joseph",grad_year:2028},{name:"Karley O'Connor",grad_year:2029},
+  {name:"Seana Kane",grad_year:2029},{name:"Lillian Brokvist",grad_year:2029},
+  {name:"Elizabeth Olson",grad_year:2029},{name:"Nunez Jesiah",grad_year:2026},
+  {name:"Abigail Troisi",grad_year:2027},{name:"Nell Russell",grad_year:2027},
+  {name:"Mason Gadea",grad_year:2028},{name:"Daria Alic",grad_year:2028},
+  {name:"Charlotte Franco",grad_year:2029},{name:"Megan Burke",grad_year:2029},
+  {name:"Vinaja Allen",grad_year:2026},{name:"Kamille Suplice",grad_year:2027},
+  {name:"Isaiah Mwangi",grad_year:2028}
+];
+const SEED_MEETS = [
+  {name:"Gloucester", season:"2024-25", date:"2024-11-05"},
+  {name:"Swampscott", season:"2024-25", date:"2024-11-12"},
+  {name:"Danvers",    season:"2024-25", date:"2024-11-19"},
+  {name:"Masco",      season:"2024-25", date:"2024-12-03"},
+  {name:"Salem",      season:"2024-25", date:"2024-12-10"},
+  {name:"Marblehead", season:"2024-25", date:"2024-12-17"},
+];
+const SEED_TIMES_RAW = [
+  [1,"500 Free",366.56,"Gloucester"],[1,"500 Free",369.76,"Swampscott"],[2,"50 Free",25.25,"Masco"],
+  [2,"50 Free",25.53,"Danvers"],[3,"50 Free",25.67,"Gloucester"],[1,"50 Free",25.89,"Gloucester"],
+  [3,"50 Free",25.97,"Masco"],[3,"50 Free",26.13,"Swampscott"],[2,"100 Breast",76.94,"Gloucester"],
+  [4,"200 IM",158.94,"Danvers"],[3,"50 Free",26.25,"Danvers"],[5,"100 Breast",85.21,"Gloucester"],
+  [6,"100 Back",72.47,"Gloucester"],[2,"50 Free",26.34,"Swampscott"],[7,"100 Back",79.02,"Gloucester"],
+  [8,"200 Free",145.53,"Gloucester"],[9,"200 Free",151.27,"Gloucester"],[10,"200 Free",161.97,"Gloucester"],
+  [6,"200 IM",166.6,"Gloucester"],[2,"50 Free",26.37,"Salem"],[8,"100 Fly",73.65,"Gloucester"],
+  [11,"50 Free",26.44,"Salem"],[11,"50 Free",26.57,"Swampscott"],[4,"100 Breast",80.44,"Danvers"],
+  [11,"50 Free",26.72,"Danvers"],[12,"100 Back",95.81,"Gloucester"],[9,"100 Breast",96.32,"Gloucester"],
+  [11,"50 Free",26.73,"Masco"],[3,"50 Free",26.82,"Marblehead"],[6,"50 Back",32.9,"Gloucester"],
+  [5,"100 Breast",90.47,"Salem"],[7,"50 Fly",30.51,"Gloucester"],[11,"50 Free",26.84,"Gloucester"],
+  [1,"50 Free",27.3,"Gloucester"],[3,"50 Free",27.43,"Salem"],[4,"200 IM",150.13,"Gloucester"],
+  [11,"50 Free",29.85,"Marblehead"],[13,"50 Free",31.15,"Danvers"],[10,"50 Free",31.22,"Danvers"],
+  [3,"50 Back",31.74,"Gloucester"],[2,"50 Breast",33.13,"Gloucester"],[8,"50 Free",31.62,"Gloucester"],
+  [14,"200 IM",201.69,"Gloucester"],[4,"100 Fly",74.81,"Gloucester"],[13,"50 Free",32.33,"Gloucester"],
+  [15,"100 Fly",86.51,"Gloucester"],[9,"50 Free",32.77,"Gloucester"],[5,"100 Breast",86.09,"Swampscott"],
+  [10,"50 Free",33.22,"Masco"],[1,"50 Free",33.4,"Marblehead"],[14,"50 Free",34.64,"Gloucester"],
+  [13,"50 Free",35.78,"Salem"],[16,"50 Free",36.78,"Salem"],[17,"50 Free",37.75,"Gloucester"],
+  [17,"50 Free",37.78,"Danvers"],[4,"50 Free",29.24,"Gloucester"],[2,"100 Breast",81.38,"Marblehead"],
+  [4,"50 Fly",30.46,"Gloucester"],[6,"100 Back",72.01,"Marblehead"],[18,"50 Free",38.08,"Danvers"],
+  [1,"500 Free",370.12,"Danvers"],[7,"100 Back",83.97,"Marblehead"],[15,"100 Back",88.19,"Marblehead"],
+  [9,"200 Free",154.93,"Marblehead"],[8,"200 IM",164.5,"Marblehead"],[13,"50 Free",38.09,"Masco"],
+  [5,"100 Breast",87.78,"Masco"],[8,"100 Fly",73.44,"Marblehead"],[17,"200 Free",204.69,"Marblehead"],
+  [7,"200 IM",178.65,"Marblehead"],[6,"100 Fly",74.41,"Marblehead"],[18,"50 Free",38.24,"Gloucester"],
+  [19,"100 Back",115.33,"Marblehead"],[15,"200 IM",192.56,"Marblehead"],[7,"500 Free",375.76,"Masco"],
+  [7,"500 Free",382.32,"Gloucester"],[16,"100 Breast",108.02,"Marblehead"],[20,"50 Free",38.32,"Masco"],
+  [18,"50 Free",38.96,"Masco"],[20,"50 Free",39.41,"Salem"],[2,"100 Breast",77.29,"Salem"],
+  [6,"100 Back",73.94,"Salem"],[4,"100 Fly",71.4,"Marblehead"],[21,"50 Free",39.71,"Danvers"],
+  [17,"50 Free",39.82,"Swampscott"],[7,"500 Free",382.44,"Danvers"],[8,"100 Fly",73.06,"Salem"],
+  [5,"100 Breast",85.65,"Danvers"],[8,"200 Free",142.66,"Salem"],[15,"200 Free",171.0,"Salem"],
+  [14,"200 Free",180.69,"Salem"],[6,"200 IM",170.14,"Salem"],[4,"100 Breast",83.72,"Marblehead"],
+  [1,"500 Free",387.05,"Masco"],[9,"500 Free",388.62,"Danvers"],[7,"100 Back",89.82,"Salem"],
+  [14,"100 Breast",100.69,"Salem"],[19,"50 Free",40.58,"Swampscott"],[22,"50 Free",40.59,"Swampscott"],
+  [21,"50 Free",41.16,"Masco"],[23,"100 Back",111.44,"Salem"],[22,"50 Free",41.78,"Salem"],
+  [23,"50 Free",42.25,"Danvers"],[19,"50 Free",42.42,"Salem"],[5,"100 Fly",94.03,"Masco"],
+  [1,"100 Fly",76.25,"Salem"],[24,"50 Free",42.78,"Salem"],[21,"50 Free",43.03,"Swampscott"],
+  [19,"100 Back",122.78,"Salem"],[17,"100 Breast",159.81,"Salem"],[25,"50 Free",43.63,"Gloucester"],
+  [25,"50 Free",43.96,"Swampscott"],[9,"500 Free",398.26,"Swampscott"],[23,"50 Free",44.09,"Masco"],
+  [26,"50 Free",44.38,"Danvers"],[8,"200 IM",160.93,"Swampscott"],[4,"200 IM",161.38,"Masco"],
+  [4,"100 Breast",80.32,"Masco"],[6,"100 Back",72.97,"Swampscott"],[8,"100 Fly",72.87,"Swampscott"],
+  [9,"500 Free",403.28,"Marblehead"],[1,"200 Free",134.14,"Swampscott"],[7,"100 Back",79.14,"Swampscott"],
+  [5,"100 Fly",93.44,"Danvers"],[9,"200 Free",152.38,"Swampscott"],[15,"200 Free",164.85,"Swampscott"],
+  [7,"200 IM",176.19,"Swampscott"],[1,"500 Free",406.09,"Salem"],[12,"100 Back",100.32,"Swampscott"],
+  [6,"100 Fly",75.72,"Swampscott"],[27,"200 IM",193.81,"Swampscott"],[14,"100 Breast",101.22,"Swampscott"],
+  [9,"200 Free",156.6,"Masco"],[1,"200 Free",149.09,"Masco"],[10,"200 Free",161.46,"Masco"],
+  [8,"200 IM",163.04,"Masco"],[4,"200 IM",161.22,"Salem"],[15,"200 IM",183.9,"Masco"],
+  [2,"100 Free",56.89,"Danvers"],[2,"100 Free",57.62,"Masco"],[2,"100 Free",57.85,"Marblehead"],
+  [2,"100 Free",58.03,"Gloucester"],[2,"100 Free",58.15,"Swampscott"],[1,"100 Free",58.69,"Marblehead"],
+  [11,"100 Free",62.12,"Gloucester"],[11,"100 Free",62.18,"Masco"],[11,"100 Free",63.25,"Danvers"],
+  [11,"100 Free",65.22,"Marblehead"],[6,"100 Fly",77.18,"Masco"],[8,"100 Fly",74.46,"Masco"],
+  [5,"100 Free",72.15,"Marblehead"],[11,"100 Free",65.5,"Salem"],[11,"100 Free",65.76,"Swampscott"],
+  [27,"100 Free",70.93,"Gloucester"],[5,"200 Free",172.65,"Marblehead"],[7,"500 Free",432.1,"Salem"],
+  [15,"500 Free",441.41,"Swampscott"],[19,"100 Back",114.83,"Masco"],[7,"100 Back",80.81,"Masco"],
+  [6,"100 Back",73.81,"Masco"],[12,"100 Back",95.46,"Masco"],[14,"100 Breast",101.5,"Masco"],
+  [12,"200 Free",180.66,"Danvers"],[9,"200 Free",149.57,"Danvers"],[1,"200 Free",135.34,"Danvers"],
+  [27,"200 Free",166.35,"Danvers"],[8,"200 IM",160.65,"Danvers"],[4,"100 Fly",71.02,"Swampscott"],
+  [15,"200 IM",180.34,"Danvers"],[19,"100 Free",74.38,"Danvers"],[27,"100 Free",74.38,"Danvers"],
+  [10,"100 Free",75.19,"Swampscott"],[15,"100 Free",77.81,"Masco"],[10,"100 Free",78.22,"Salem"],
+  [20,"100 Free",86.5,"Gloucester"],[17,"100 Free",92.72,"Salem"],[8,"100 Fly",73.68,"Danvers"],
+  [6,"100 Fly",76.07,"Danvers"],[5,"50 Breast",37.05,"Gloucester"],[22,"100 Free",93.63,"Masco"],
+  [19,"100 Free",94.71,"Gloucester"],[19,"100 Free",100.54,"Salem"],[15,"500 Free",467.42,"Salem"],
+  [5,"500 Free",488.95,"Gloucester"],[1,"500 Free",541.34,"Marblehead"],[20,"100 Back",99.21,"Danvers"],
+  [7,"100 Back",81.91,"Danvers"],[6,"100 Back",72.5,"Danvers"],[12,"100 Back",94.25,"Danvers"],
+  [16,"100 Breast",107.22,"Danvers"],[14,"500 Free",565.39,"Marblehead"],[4,"100 Breast",81.38,"Swampscott"],
+  [14,"100 Breast",100.87,"Danvers"]
+];
+
+// ── HELPERS ──
 function formatTime(s) {
   if (!s && s !== 0) return "—";
   const mins = Math.floor(s / 60);
@@ -26,124 +189,442 @@ function formatTime(s) {
 function parseTime(str) {
   if (!str) return null;
   const clean = str.trim();
-  if (clean.includes(":")) { const [m, s] = clean.split(":").map(Number); return m * 60 + s; }
-  return parseFloat(clean) || null;
+  if (clean.includes(":")) { const [m,s]=clean.split(":").map(Number); return m*60+s; }
+  return parseFloat(clean)||null;
 }
-function CutBadge({ cuts, event, time }) {
-  const c = cuts?.[event]; if (!c) return null;
-  if (c.A && time <= c.A) return <span style={{background:"#FFD700",color:"#1a1a2e",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,letterSpacing:1}}>A CUT</span>;
-  if (c.B && time <= c.B) return <span style={{background:"#C0C0C0",color:"#1a1a2e",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,letterSpacing:1}}>B CUT</span>;
+function formatDisplayDate(d) {
+  if (!d) return "";
+  const [y,m,day]=d.split("-");
+  return `${m}/${day}/${y}`;
+}
+function isRelaySplit(eventName) {
+  return eventName.includes("(MR)") || eventName.includes("(FR)");
+}
+function baseEventOfSplit(eventName) {
+  return eventName.replace(/\s*\((MR|FR)\)/, "").trim();
+}
+
+function CutBadge({cuts,event,time}) {
+  const c=cuts?.find(x=>x.event===event);
+  if (!c) return null;
+  if (c.cut_a&&time<=c.cut_a) return <span style={{background:"#FFD700",color:"#1a1a2e",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,letterSpacing:1}}>A CUT</span>;
+  if (c.cut_b&&time<=c.cut_b) return <span style={{background:"#C0C0C0",color:"#1a1a2e",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,letterSpacing:1}}>B CUT</span>;
   return null;
 }
-function ImprovementArrow({ delta }) {
-  if (!delta && delta !== 0) return null;
-  const improved = delta < 0;
+function ImprovementArrow({delta}) {
+  if (!delta&&delta!==0) return null;
+  const improved=delta<0;
   return <span style={{color:improved?"#00e5a0":"#ff6b6b",fontWeight:700,fontSize:13}}>{improved?"▼":"▲"} {Math.abs(delta).toFixed(2)}s</span>;
 }
+function YearBadge({gradYear,style={}}) {
+  const label=gradYearToLabel(gradYear);
+  const colors={FR:"#00e5a0",SO:"#00b4ff",JR:"#a78bfa",SR:"#FFD700",GR:"#888"};
+  const color=colors[label]||"#888";
+  return <span style={{background:`${color}22`,border:`1px solid ${color}55`,color,padding:"2px 10px",borderRadius:99,fontSize:12,fontWeight:700,...style}}>{label}</span>;
+}
 
+// ── MAIN COMPONENT ──
 export default function SwimTracker() {
-  const [tab, setTab] = useState("dashboard");
-  const [swimmers, setSwimmers] = useState(SEED_DATA.swimmers);
-  const [times, setTimes] = useState(SEED_DATA.times);
-  const [meets, setMeets] = useState(SEED_DATA.meets);
-  const [events, setEvents] = useState(SEED_DATA.events);
-  const [cuts, setCuts] = useState(SEED_DATA.cuts);
-  const [selectedSwimmer, setSelectedSwimmer] = useState(null);
-  const [leaderboardEvent, setLeaderboardEvent] = useState(SEED_DATA.events[3]);
+  const [loaded,setLoaded]=useState(false);
+  const [saveStatus,setSaveStatus]=useState("idle");
+  const [tab,setTab]=useState("dashboard");
+  const [swimmers,setSwimmers]=useState([]);
+  const [times,setTimes]=useState([]);
+  const [meets,setMeets]=useState([]);
+  const [events,setEvents]=useState([]);
+  const [cuts,setCuts]=useState([]);
+  const [relayResults,setRelayResults]=useState([]);
 
-  const [editingMeet, setEditingMeet] = useState(null);
-  const [editMeetName, setEditMeetName] = useState("");
-  const [editMeetSeason, setEditMeetSeason] = useState("");
-  const [collapsedSeasons, setCollapsedSeasons] = useState({});
+  // Swimmer profile
+  const [selectedSwimmer,setSelectedSwimmer]=useState(null);
+  const [chartEvent,setChartEvent]=useState("");
+  const [editingSwimmer,setEditingSwimmer]=useState(null);
+  const [editSwimmerName,setEditSwimmerName]=useState("");
+  const [editSwimmerGradYear,setEditSwimmerGradYear]=useState("");
 
-  const [showAddTime, setShowAddTime] = useState(false);
-  const [showAddSwimmer, setShowAddSwimmer] = useState(false);
-  const [showAddMeet, setShowAddMeet] = useState(false);
-  const [showAddEvent, setShowAddEvent] = useState(false);
-  const [showEditCut, setShowEditCut] = useState(null);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(null);
+  // Roster filters
+  const [rosterYearFilter,setRosterYearFilter]=useState("ALL");
+  const [rosterEventFilter,setRosterEventFilter]=useState("");
+  const [rosterSort,setRosterSort]=useState("cuts");
 
-  const [newTime, setNewTime] = useState({swimmerId:"",event:"",time:"",date:"",meet:""});
-  const [newSwimmer, setNewSwimmer] = useState({name:"",age:"",specialty:"Freestyle"});
-  const [newMeet, setNewMeet] = useState({name:"",season:""});
-  const [newEvent, setNewEvent] = useState("");
-  const [editCutA, setEditCutA] = useState("");
-  const [editCutB, setEditCutB] = useState("");
+  // Meets
+  const [leaderboardEvent,setLeaderboardEvent]=useState("");
+  const [editingMeet,setEditingMeet]=useState(null);
+  const [editMeetName,setEditMeetName]=useState("");
+  const [editMeetSeason,setEditMeetSeason]=useState("");
+  const [editMeetDate,setEditMeetDate]=useState("");
+  const [collapsedSeasons,setCollapsedSeasons]=useState({});
 
-  const nextId = arr => arr.length ? Math.max(...arr.map(x => x.id)) + 1 : 1;
+  // Enter Results
+  const [resultsMeet,setResultsMeet]=useState("");
+  const [resultsGrid,setResultsGrid]=useState({});
+  const [relayGrid,setRelayGrid]=useState({});
+  const [relayTotals,setRelayTotals]=useState({});
+  const [showConflicts,setShowConflicts]=useState(null);
+  const [pendingSave,setPendingSave]=useState(null);
+  const [swimmerSearch,setSwimmerSearch]=useState({});
+  const [swimmerDropdown,setSwimmerDropdown]=useState({});
 
-  const pbMap = useMemo(() => {
-    const map = {};
-    times.forEach(t => { const k = `${t.swimmerId}-${t.event}`; if (!map[k] || t.time < map[k]) map[k] = t.time; });
+  // Modals
+  const [showAddTime,setShowAddTime]=useState(false);
+  const [showAddSwimmer,setShowAddSwimmer]=useState(false);
+  const [showAddMeet,setShowAddMeet]=useState(false);
+  const [showAddEvent,setShowAddEvent]=useState(false);
+  const [showEditCut,setShowEditCut]=useState(null);
+  const [showConfirmDelete,setShowConfirmDelete]=useState(null);
+  const [newTime,setNewTime]=useState({swimmer_id:"",event:"",time:"",meet:""});
+  const [newSwimmer,setNewSwimmer]=useState({name:"",grad_year:""});
+  const [newMeet,setNewMeet]=useState({name:"",season:"",date:""});
+  const [newEvent,setNewEvent]=useState("");
+  const [editCutA,setEditCutA]=useState("");
+  const [editCutB,setEditCutB]=useState("");
+
+  const flash=useCallback((status)=>{
+    setSaveStatus(status);
+    setTimeout(()=>setSaveStatus("idle"),status==="error"?3000:2000);
+  },[]);
+
+  // ── LOAD & MIGRATE ──
+  useEffect(()=>{
+    async function load() {
+      try {
+        // Run migration first
+        for (const [oldName,newName] of Object.entries(EVENT_RENAME_MAP)) {
+          await supabase.from("times").update({event:newName}).eq("event",oldName);
+          await supabase.from("events").update({name:newName}).eq("name",oldName);
+          await supabase.from("cuts").update({event:newName}).eq("event",oldName);
+        }
+
+        // Ensure relay_results table exists by attempting a select
+        await supabase.from("relay_results").select("id").limit(1);
+
+        const [sw,me,ev,ti,cu,rr]=await Promise.all([
+          supabase.from("swimmers").select("*").order("id"),
+          supabase.from("meets").select("*").order("id"),
+          supabase.from("events").select("*").order("id"),
+          supabase.from("times").select("*").order("id"),
+          supabase.from("cuts").select("*").order("id"),
+          supabase.from("relay_results").select("*").order("id"),
+        ]);
+
+        if (!sw.data?.length) {
+          const {data:seededSwimmers}=await supabase.from("swimmers").insert(SEED_SWIMMERS).select();
+          const swMap={};
+          seededSwimmers.forEach((s,i)=>{swMap[i+1]=s.id;});
+          const {data:seededMeets}=await supabase.from("meets").insert(SEED_MEETS).select();
+          const meetDateMap={};
+          seededMeets.forEach(m=>{meetDateMap[m.name]=m.date;});
+          await supabase.from("events").insert(INDIVIDUAL_EVENTS.map(name=>({name})));
+          const timesToInsert=SEED_TIMES_RAW.map(([idx,event,time,meet])=>({
+            swimmer_id:swMap[idx],event,time,meet,date:meetDateMap[meet]||"2024-11-05"
+          }));
+          for (let i=0;i<timesToInsert.length;i+=50) {
+            await supabase.from("times").insert(timesToInsert.slice(i,i+50));
+          }
+          const [sw2,me2,ev2,ti2,cu2,rr2]=await Promise.all([
+            supabase.from("swimmers").select("*").order("id"),
+            supabase.from("meets").select("*").order("id"),
+            supabase.from("events").select("*").order("id"),
+            supabase.from("times").select("*").order("id"),
+            supabase.from("cuts").select("*").order("id"),
+            supabase.from("relay_results").select("*").order("id"),
+          ]);
+          setSwimmers(sw2.data||[]); setMeets(me2.data||[]);
+          setEvents((ev2.data||[]).map(e=>e.name)); setTimes(ti2.data||[]);
+          setCuts(cu2.data||[]); setRelayResults(rr2.data||[]);
+          setLeaderboardEvent((ev2.data||[])[3]?.name||"");
+        } else {
+          setSwimmers(sw.data||[]); setMeets(me.data||[]);
+          setEvents((ev.data||[]).map(e=>e.name)); setTimes(ti.data||[]);
+          setCuts(cu.data||[]); setRelayResults(rr.data||[]);
+          setLeaderboardEvent((ev.data||[])[3]?.name||"");
+        }
+      } catch(e){console.error(e);}
+      setLoaded(true);
+    }
+    load();
+  },[]);
+
+  const meetDateMap=useMemo(()=>{
+    const m={};
+    meets.forEach(meet=>{m[meet.name]=meet.date||"";});
+    return m;
+  },[meets]);
+
+  const pbMap=useMemo(()=>{
+    const map={};
+    times.forEach(t=>{
+      const k=`${t.swimmer_id}-${t.event}`;
+      if (!map[k]||t.time<map[k]) map[k]=t.time;
+    });
     return map;
-  }, [times]);
+  },[times]);
 
-  const seasons = useMemo(() => [...new Set(meets.map(m => m.season || ""))].sort(), [meets]);
-  const meetsBySeason = useMemo(() => {
-    const groups = {};
-    meets.forEach(m => { const s = m.season||""; if(!groups[s]) groups[s]=[]; groups[s].push(m); });
+  const seasons=useMemo(()=>[...new Set(meets.map(m=>m.season||""))].sort(),[meets]);
+  const meetsBySeason=useMemo(()=>{
+    const groups={};
+    meets.forEach(m=>{const s=m.season||"";if(!groups[s])groups[s]=[];groups[s].push(m);});
+    Object.values(groups).forEach(arr=>arr.sort((a,b)=>(a.date||"").localeCompare(b.date||"")));
     return groups;
-  }, [meets]);
+  },[meets]);
 
-  const swimmerTimes = sid => times.filter(t => t.swimmerId === sid).sort((a,b) => new Date(b.date)-new Date(a.date));
+  const swimmerTimesSorted=useCallback((sid)=>{
+    return times
+      .filter(t=>t.swimmer_id===sid)
+      .map(t=>({...t,meetDate:meetDateMap[t.meet]||t.date||""}))
+      .sort((a,b)=>a.meetDate.localeCompare(b.meetDate));
+  },[times,meetDateMap]);
 
-  const leaderboard = useMemo(() => {
+  const leaderboard=useMemo(()=>{
     if (!leaderboardEvent) return [];
-    return swimmers.map(sw => {
-      const best = times.filter(t => t.swimmerId===sw.id && t.event===leaderboardEvent).sort((a,b)=>a.time-b.time)[0];
-      return best ? {swimmer:sw, time:best.time} : null;
+    return swimmers.map(sw=>{
+      const best=times.filter(t=>t.swimmer_id===sw.id&&t.event===leaderboardEvent).sort((a,b)=>a.time-b.time)[0];
+      return best?{swimmer:sw,time:best.time}:null;
     }).filter(Boolean).sort((a,b)=>a.time-b.time);
-  }, [swimmers, times, leaderboardEvent]);
+  },[swimmers,times,leaderboardEvent]);
 
-  const addTime = () => {
-    const parsed = parseTime(newTime.time);
-    if (!newTime.swimmerId || !newTime.event || !parsed || !newTime.date) return;
-    setTimes(t => [...t, {...newTime, id:nextId(times), swimmerId:Number(newTime.swimmerId), time:parsed}]);
-    setNewTime({swimmerId:"",event:"",time:"",date:"",meet:""}); setShowAddTime(false);
+  // ── ACTIONS ──
+  const addTime=async()=>{
+    const parsed=parseTime(newTime.time);
+    if (!newTime.swimmer_id||!newTime.event||!parsed||!newTime.meet) return;
+    const date=meetDateMap[newTime.meet]||"";
+    setSaveStatus("saving");
+    const {data,error}=await supabase.from("times").insert({
+      swimmer_id:Number(newTime.swimmer_id),event:newTime.event,time:parsed,meet:newTime.meet,date
+    }).select().single();
+    if (error){flash("error");return;}
+    setTimes(t=>[...t,data]);
+    setNewTime({swimmer_id:"",event:"",time:"",meet:""}); setShowAddTime(false); flash("saved");
   };
-  const addSwimmer = () => {
+
+  const addSwimmer=async()=>{
     if (!newSwimmer.name) return;
-    setSwimmers(s => [...s, {...newSwimmer, id:nextId(swimmers), age:Number(newSwimmer.age)}]);
-    setNewSwimmer({name:"",age:"",specialty:"Freestyle"}); setShowAddSwimmer(false);
+    setSaveStatus("saving");
+    const {data,error}=await supabase.from("swimmers").insert({
+      name:newSwimmer.name,grad_year:Number(newSwimmer.grad_year)||null
+    }).select().single();
+    if (error){flash("error");return;}
+    setSwimmers(s=>[...s,data]);
+    setNewSwimmer({name:"",grad_year:""}); setShowAddSwimmer(false); flash("saved");
   };
-  const addMeet = () => {
-    const name = newMeet.name.trim();
-    if (!name || meets.some(m => m.name === name)) return;
-    setMeets(m => [...m, { id: nextId(meets), name, season: newMeet.season.trim() }]);
-    setNewMeet({name:"",season:""}); setShowAddMeet(false);
+
+  const saveSwimmerEdit=async()=>{
+    if (!editSwimmerName.trim()) return;
+    setSaveStatus("saving");
+    const {error}=await supabase.from("swimmers").update({
+      name:editSwimmerName.trim(),grad_year:Number(editSwimmerGradYear)||null
+    }).eq("id",editingSwimmer);
+    if (error){flash("error");return;}
+    setSwimmers(s=>s.map(x=>x.id===editingSwimmer?{...x,name:editSwimmerName.trim(),grad_year:Number(editSwimmerGradYear)||null}:x));
+    setEditingSwimmer(null); flash("saved");
   };
-  const saveMeetEdit = () => {
-    const newName = editMeetName.trim(); if (!newName) return;
-    const oldName = meets.find(m => m.id === editingMeet)?.name;
-    setMeets(m => m.map(x => x.id===editingMeet ? {...x, name:newName, season:editMeetSeason.trim()} : x));
-    if (oldName !== newName) setTimes(t => t.map(x => x.meet===oldName ? {...x, meet:newName} : x));
-    setEditingMeet(null);
+
+  const addMeet=async()=>{
+    const name=newMeet.name.trim();
+    if (!name||meets.some(m=>m.name===name)) return;
+    setSaveStatus("saving");
+    const {data,error}=await supabase.from("meets").insert({name,season:newMeet.season.trim(),date:newMeet.date||null}).select().single();
+    if (error){flash("error");return;}
+    setMeets(m=>[...m,data]); setNewMeet({name:"",season:"",date:""}); setShowAddMeet(false); flash("saved");
   };
-  const addEvent = () => {
-    const name = newEvent.trim(); if (!name || events.includes(name)) return;
-    setEvents(e => [...e, name]); setNewEvent(""); setShowAddEvent(false);
+
+  const saveMeetEdit=async()=>{
+    const newName=editMeetName.trim(); if (!newName) return;
+    const meet=meets.find(m=>m.id===editingMeet);
+    const oldName=meet.name;
+    setSaveStatus("saving");
+    const {error}=await supabase.from("meets").update({name:newName,season:editMeetSeason.trim(),date:editMeetDate||null}).eq("id",editingMeet);
+    if (error){flash("error");return;}
+    setMeets(m=>m.map(x=>x.id===editingMeet?{...x,name:newName,season:editMeetSeason.trim(),date:editMeetDate||null}:x));
+    if (oldName!==newName){
+      await supabase.from("times").update({meet:newName}).eq("meet",oldName);
+      setTimes(t=>t.map(x=>x.meet===oldName?{...x,meet:newName}:x));
+    }
+    if (editMeetDate){
+      await supabase.from("times").update({date:editMeetDate}).eq("meet",newName);
+      setTimes(t=>t.map(x=>x.meet===newName?{...x,date:editMeetDate}:x));
+    }
+    setEditingMeet(null); flash("saved");
   };
-  const removeEvent = ev => {
-    setEvents(e => e.filter(x=>x!==ev));
-    setCuts(c => { const n={...c}; delete n[ev]; return n; });
+
+  const addEvent=async()=>{
+    const name=newEvent.trim(); if (!name||events.includes(name)) return;
+    setSaveStatus("saving");
+    const {error}=await supabase.from("events").insert({name});
+    if (error){flash("error");return;}
+    setEvents(e=>[...e,name]); setNewEvent(""); setShowAddEvent(false); flash("saved");
+  };
+
+  const removeEvent=async(ev)=>{
+    await supabase.from("events").delete().eq("name",ev);
+    await supabase.from("cuts").delete().eq("event",ev);
+    setEvents(e=>e.filter(x=>x!==ev));
+    setCuts(c=>c.filter(x=>x.event!==ev));
     setShowConfirmDelete(null);
     if (leaderboardEvent===ev) setLeaderboardEvent(events.filter(x=>x!==ev)[0]||"");
   };
-  const saveCut = evName => {
-    const A = parseTime(editCutA), B = parseTime(editCutB);
-    setCuts(c => { const n={...c}; if(!A&&!B){delete n[evName];}else{n[evName]={A:A||null,B:B||null};} return n; });
-    setShowEditCut(null);
-  };
-  const removeCut = evName => { setCuts(c=>{const n={...c};delete n[evName];return n;}); setShowConfirmDelete(null); };
-  const toggleSeason = s => setCollapsedSeasons(c => ({...c, [s]: !c[s]}));
 
-  const css = `
+  const saveCut=async(evName)=>{
+    const A=parseTime(editCutA),B=parseTime(editCutB);
+    setSaveStatus("saving");
+    const existing=cuts.find(c=>c.event===evName);
+    if (!A&&!B){
+      if (existing) await supabase.from("cuts").delete().eq("event",evName);
+      setCuts(c=>c.filter(x=>x.event!==evName));
+    } else if (existing){
+      await supabase.from("cuts").update({cut_a:A||null,cut_b:B||null}).eq("event",evName);
+      setCuts(c=>c.map(x=>x.event===evName?{...x,cut_a:A||null,cut_b:B||null}:x));
+    } else {
+      const {data}=await supabase.from("cuts").insert({event:evName,cut_a:A||null,cut_b:B||null}).select().single();
+      setCuts(c=>[...c,data]);
+    }
+    setShowEditCut(null); flash("saved");
+  };
+
+  const removeCut=async(evName)=>{
+    await supabase.from("cuts").delete().eq("event",evName);
+    setCuts(c=>c.filter(x=>x.event!==evName));
+    setShowConfirmDelete(null);
+  };
+
+  const toggleSeason=s=>setCollapsedSeasons(c=>({...c,[s]:!c[s]}));
+
+  // ── ENTER RESULTS ──
+  const initResultsGrid=(meetName)=>{
+    const grid={};
+    MEET_EVENT_ORDER.forEach(ev=>{
+      grid[ev]=[{swimmerName:"",time:""},{swimmerName:"",time:""},{swimmerName:"",time:""},{swimmerName:"",time:""}];
+    });
+    const rGrid={};
+    const rTotals={};
+    RELAY_EVENTS.forEach(relay=>{
+      rGrid[relay]=RELAY_LEGS[relay].map(()=>({swimmerName:"",time:""}));
+      rTotals[relay]="";
+    });
+    setResultsGrid(grid);
+    setRelayGrid(rGrid);
+    setRelayTotals(rTotals);
+    setSwimmerSearch({});
+    setSwimmerDropdown({});
+  };
+
+  const updateResultsCell=(event,rowIdx,field,value)=>{
+    setResultsGrid(g=>({...g,[event]:g[event].map((r,i)=>i===rowIdx?{...r,[field]:value}:r)}));
+  };
+
+  const updateRelayCell=(relay,rowIdx,field,value)=>{
+    setRelayGrid(g=>({...g,[relay]:g[relay].map((r,i)=>i===rowIdx?{...r,[field]:value}:r)}));
+  };
+
+  const addRowToEvent=(event)=>{
+    setResultsGrid(g=>({...g,[event]:[...g[event],{swimmerName:"",time:""}]}));
+  };
+
+  const matchSwimmer=(name)=>{
+    if (!name.trim()) return null;
+    return swimmers.find(s=>s.name.toLowerCase()===name.toLowerCase().trim())||null;
+  };
+
+  const getSwimmerSuggestions=(query)=>{
+    if (!query.trim()||query.length<2) return [];
+    return swimmers.filter(s=>s.name.toLowerCase().includes(query.toLowerCase())).slice(0,6);
+  };
+
+  const prepareSaveData=()=>{
+    const meet=meets.find(m=>m.name===resultsMeet);
+    if (!meet) return {timesToSave:[],relayTimesToSave:[],relayResultsToSave:[]};
+    const date=meet.date||"";
+    const timesToSave=[];
+    const relayTimesToSave=[];
+    const relayResultsToSave=[];
+
+    // Individual events
+    MEET_EVENT_ORDER.forEach(event=>{
+      (resultsGrid[event]||[]).forEach(row=>{
+        const sw=matchSwimmer(row.swimmerName);
+        const t=parseTime(row.time);
+        if (sw&&t) timesToSave.push({swimmer_id:sw.id,event,time:t,meet:resultsMeet,date});
+      });
+    });
+
+    // Relays
+    RELAY_EVENTS.forEach(relay=>{
+      const legs=RELAY_LEGS[relay];
+      (relayGrid[relay]||[]).forEach((row,i)=>{
+        const sw=matchSwimmer(row.swimmerName);
+        const t=parseTime(row.time);
+        if (sw&&t) relayTimesToSave.push({swimmer_id:sw.id,event:legs[i].event,time:t,meet:resultsMeet,date});
+      });
+      const total=parseTime(relayTotals[relay]);
+      if (total) relayResultsToSave.push({meet:resultsMeet,relay,total_time:total,date});
+    });
+
+    return {timesToSave,relayTimesToSave,relayResultsToSave};
+  };
+
+  const handleSaveMeetResults=()=>{
+    if (!resultsMeet) return;
+    const {timesToSave,relayTimesToSave,relayResultsToSave}=prepareSaveData();
+    const allTimes=[...timesToSave,...relayTimesToSave];
+    if (!allTimes.length&&!relayResultsToSave.length) return;
+
+    // Check conflicts
+    const conflicts=[];
+    allTimes.forEach(t=>{
+      const existing=times.find(x=>x.swimmer_id===t.swimmer_id&&x.event===t.event&&x.meet===t.meet);
+      if (existing){
+        const sw=swimmers.find(s=>s.id===t.swimmer_id);
+        conflicts.push({swimmerName:sw?.name,event:t.event,oldTime:existing.time,newTime:t.time,existingId:existing.id});
+      }
+    });
+
+    if (conflicts.length>0){
+      setShowConflicts(conflicts);
+      setPendingSave({allTimes,relayResultsToSave});
+    } else {
+      executeSave(allTimes,relayResultsToSave,false);
+    }
+  };
+
+  const executeSave=async(allTimes,relayResultsToSave,overwrite)=>{
+    setSaveStatus("saving");
+    setShowConflicts(null);
+    const toInsert=overwrite?allTimes:allTimes.filter(t=>!times.find(x=>x.swimmer_id===t.swimmer_id&&x.event===t.event&&x.meet===t.meet));
+    const toUpdate=overwrite?allTimes.filter(t=>times.find(x=>x.swimmer_id===t.swimmer_id&&x.event===t.event&&x.meet===t.meet)):[];
+    const toInsertClean=toInsert.filter(t=>!times.find(x=>x.swimmer_id===t.swimmer_id&&x.event===t.event&&x.meet===t.meet));
+
+    if (toInsertClean.length){
+      const {data}=await supabase.from("times").insert(toInsertClean).select();
+      if (data) setTimes(t=>[...t,...data]);
+    }
+    for (const t of toUpdate){
+      const existing=times.find(x=>x.swimmer_id===t.swimmer_id&&x.event===t.event&&x.meet===t.meet);
+      if (existing){
+        const {data}=await supabase.from("times").update({time:t.time}).eq("id",existing.id).select().single();
+        if (data) setTimes(ts=>ts.map(x=>x.id===existing.id?data:x));
+      }
+    }
+    for (const rr of relayResultsToSave){
+      await supabase.from("relay_results").insert(rr);
+    }
+    setRelayResults(r=>[...r,...relayResultsToSave]);
+    setPendingSave(null);
+    initResultsGrid(resultsMeet);
+    flash("saved");
+  };
+
+  // ── STYLES ──
+  const css=`
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
     * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:#080d1a; }
     ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:#0d1526} ::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}
     input,select{outline:none} input::placeholder{color:#3a5a7a}
-    .meet-row:hover { border-color: #1e4070 !important; }
-    .icon-btn:hover { opacity:0.8; }
+    .meet-row:hover{border-color:#1e4070 !important;}
+    .swimmer-card:hover{border-color:#1e4070 !important;transform:translateY(-1px);}
+    .swimmer-card{transition:border-color 0.2s,transform 0.15s;}
+    .suggestion-item:hover{background:#1a3050 !important;}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   `;
   const bg="#080d1a",card="#0d1a2e",border="#1a3050",accent="#00b4ff",gold="#FFD700",text="#e0eaf8",muted="#4a7090",danger="#ff4d4d";
@@ -152,14 +633,28 @@ export default function SwimTracker() {
   const btnPrimary={background:`linear-gradient(135deg,${accent},#0077cc)`,border:"none",borderRadius:8,color:"#fff",padding:"10px 22px",fontFamily:"Barlow Condensed, sans-serif",fontSize:15,fontWeight:700,letterSpacing:1,cursor:"pointer",boxShadow:"0 0 20px rgba(0,180,255,0.3)"};
   const btnSecondary={background:"transparent",border:`1px solid ${border}`,borderRadius:8,color:muted,padding:"10px 22px",fontFamily:"Barlow Condensed, sans-serif",fontSize:15,cursor:"pointer"};
   const btnDanger={background:"transparent",border:`1px solid ${danger}44`,borderRadius:8,color:danger,padding:"7px 14px",fontFamily:"Barlow Condensed, sans-serif",fontSize:13,cursor:"pointer"};
-  const modalOverlay={position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100};
   const modalBox={background:card,border:`1px solid ${border}`,borderRadius:16,padding:28,width:440,maxWidth:"95vw",boxShadow:"0 24px 60px rgba(0,0,0,0.6)",animation:"fadeIn 0.2s ease"};
-  const tabDefs=[{id:"dashboard",label:"Dashboard"},{id:"swimmers",label:"Swimmers"},{id:"meets",label:"Meets"},{id:"leaderboard",label:"Leaderboard"},{id:"cuts",label:"Qualifying Cuts"},{id:"settings",label:"⚙ Settings"}];
+  const overlay={position:"fixed" as const,inset:0,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100};
+  const tabDefs=[
+    {id:"dashboard",label:"Dashboard"},{id:"swimmers",label:"Swimmers"},
+    {id:"meets",label:"Meets"},{id:"results",label:"Enter Results"},
+    {id:"leaderboard",label:"Leaderboard"},{id:"cuts",label:"Qualifying Cuts"},
+    {id:"settings",label:"⚙ Settings"}
+  ];
 
-  const renderDashboard = () => {
-    const totalACuts = Object.entries(pbMap).filter(([k,t])=>{const ev=k.split(/-(.+)/)[1];return cuts[ev]&&cuts[ev].A&&t<=cuts[ev].A}).length;
-    const totalBCuts = Object.entries(pbMap).filter(([k,t])=>{const ev=k.split(/-(.+)/)[1];return cuts[ev]&&cuts[ev].B&&t<=cuts[ev].B&&(!cuts[ev].A||t>cuts[ev].A)}).length;
-    const recentTimes = [...times].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+  if (!loaded) return (
+    <><style>{css}</style>
+    <div style={{background:bg,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+      <div style={{width:40,height:40,border:`3px solid ${border}`,borderTop:`3px solid ${accent}`,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+      <div style={{color:muted,fontFamily:"Barlow Condensed, sans-serif",fontSize:16,letterSpacing:2}}>LOADING DATA…</div>
+    </div></>
+  );
+
+  // ── DASHBOARD ──
+  const renderDashboard=()=>{
+    const totalACuts=Object.entries(pbMap).filter(([k,t])=>{const ev=k.split(/-(.+)/)[1];const c=cuts.find(x=>x.event===ev);return c&&c.cut_a&&t<=c.cut_a}).length;
+    const totalBCuts=Object.entries(pbMap).filter(([k,t])=>{const ev=k.split(/-(.+)/)[1];const c=cuts.find(x=>x.event===ev);return c&&c.cut_b&&t<=c.cut_b&&(!c.cut_a||t>c.cut_a)}).length;
+    const recentTimes=[...times].sort((a,b)=>(meetDateMap[b.meet]||b.date||"").localeCompare(meetDateMap[a.meet]||a.date||"")).slice(0,8);
     return (
       <div style={{display:"flex",flexDirection:"column",gap:24}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16}}>
@@ -177,11 +672,11 @@ export default function SwimTracker() {
               <button style={{...btnPrimary,padding:"7px 16px",fontSize:13}} onClick={()=>setShowAddTime(true)}>+ LOG TIME</button>
             </div>
             {recentTimes.map(t=>{
-              const sw=swimmers.find(s=>s.id===t.swimmerId); const isPB=pbMap[`${t.swimmerId}-${t.event}`]===t.time;
+              const sw=swimmers.find(s=>s.id===t.swimmer_id);const isPB=pbMap[`${t.swimmer_id}-${t.event}`]===t.time;
               return (<div key={t.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",borderBottom:`1px solid ${border}`}}>
                 <div><div style={{color:text,fontSize:14,fontWeight:600}}>{sw?.name}</div><div style={{color:muted,fontSize:12}}>{t.event} · {t.meet}</div></div>
                 <div style={{textAlign:"right"}}>
-                  <div style={{color:isPB?gold:text,fontSize:16,fontFamily:"Barlow Condensed, sans-serif",fontWeight:700}}>{formatTime(t.time)} {isPB&&<span style={{fontSize:11}}>PB</span>}</div>
+                  <div style={{color:isPB?gold:text,fontSize:16,fontFamily:"Barlow Condensed, sans-serif",fontWeight:700}}>{formatTime(t.time)}{isPB&&<span style={{fontSize:11,marginLeft:4}}>PB</span>}</div>
                   <CutBadge cuts={cuts} event={t.event} time={t.time}/>
                 </div>
               </div>);
@@ -190,10 +685,13 @@ export default function SwimTracker() {
           <div style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:24}}>
             <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:18,fontWeight:700,color:text,letterSpacing:1,marginBottom:18}}>TEAM CUTS STATUS</h3>
             {swimmers.map(sw=>{
-              const aCuts=Object.keys(cuts).filter(ev=>{const pb=pbMap[`${sw.id}-${ev}`];return pb&&cuts[ev].A&&pb<=cuts[ev].A}).length;
-              const bCuts=Object.keys(cuts).filter(ev=>{const pb=pbMap[`${sw.id}-${ev}`];return pb&&cuts[ev].B&&pb<=cuts[ev].B&&(!cuts[ev].A||pb>cuts[ev].A)}).length;
+              const aCuts=cuts.filter(c=>c.cut_a&&pbMap[`${sw.id}-${c.event}`]&&pbMap[`${sw.id}-${c.event}`]<=c.cut_a).length;
+              const bCuts=cuts.filter(c=>c.cut_b&&pbMap[`${sw.id}-${c.event}`]&&pbMap[`${sw.id}-${c.event}`]<=c.cut_b&&(!c.cut_a||pbMap[`${sw.id}-${c.event}`]>c.cut_a)).length;
               return (<div key={sw.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",borderBottom:`1px solid ${border}`}}>
-                <div><div style={{color:text,fontSize:14,fontWeight:600}}>{sw.name}</div><div style={{color:muted,fontSize:12}}>{sw.specialty} · Age {sw.age}</div></div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{color:text,fontSize:14,fontWeight:600}}>{sw.name}</div>
+                  <YearBadge gradYear={sw.grad_year}/>
+                </div>
                 <div style={{display:"flex",gap:8}}>
                   {aCuts>0&&<span style={{background:gold,color:"#1a1a2e",padding:"2px 10px",borderRadius:99,fontSize:12,fontWeight:700}}>{aCuts}×A</span>}
                   {bCuts>0&&<span style={{background:"#C0C0C0",color:"#1a1a2e",padding:"2px 10px",borderRadius:99,fontSize:12,fontWeight:700}}>{bCuts}×B</span>}
@@ -207,69 +705,368 @@ export default function SwimTracker() {
     );
   };
 
-  const renderSwimmers = () => {
-    if (selectedSwimmer) {
-      const sw=swimmers.find(s=>s.id===selectedSwimmer); const swTimes=swimmerTimes(selectedSwimmer);
-      const swEvents=[...new Set(swTimes.map(t=>t.event))];
+  // ── SWIMMER AUTOCOMPLETE INPUT ──
+  const SwimmerInput=({cellKey,value,onChange})=>{
+    const suggestions=getSwimmerSuggestions(value);
+    const showDrop=swimmerDropdown[cellKey]&&suggestions.length>0;
+    return (
+      <div style={{position:"relative" as const,flex:1}}>
+        <input
+          style={{...inputSmall,borderRadius:6}}
+          placeholder="Swimmer name…"
+          value={value}
+          onChange={e=>{onChange(e.target.value);setSwimmerDropdown(d=>({...d,[cellKey]:true}));}}
+          onBlur={()=>setTimeout(()=>setSwimmerDropdown(d=>({...d,[cellKey]:false})),150)}
+          onFocus={()=>setSwimmerDropdown(d=>({...d,[cellKey]:true}))}
+        />
+        {showDrop&&(
+          <div style={{position:"absolute" as const,top:"100%",left:0,right:0,background:card,border:`1px solid ${border}`,borderRadius:8,zIndex:50,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",marginTop:2}}>
+            {suggestions.map(s=>(
+              <div key={s.id} className="suggestion-item"
+                onMouseDown={()=>{onChange(s.name);setSwimmerDropdown(d=>({...d,[cellKey]:false}));}}
+                style={{padding:"8px 12px",color:text,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
+                {s.name}<YearBadge gradYear={s.grad_year}/>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── ENTER RESULTS ──
+  const renderResults=()=>(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+        <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text}}>ENTER MEET RESULTS</h2>
+      </div>
+
+      {/* Meet selector */}
+      <div style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:20,marginBottom:24}}>
+        <label style={{color:muted,fontSize:12,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:8}}>Select Meet</label>
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+          <select style={{...inputStyle,maxWidth:320}} value={resultsMeet} onChange={e=>{setResultsMeet(e.target.value);initResultsGrid(e.target.value);}}>
+            <option value="">— Choose a meet —</option>
+            {[...meets].sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(m=>(
+              <option key={m.id} value={m.name}>{m.name}{m.date?` (${formatDisplayDate(m.date)})`:""}</option>
+            ))}
+          </select>
+          {resultsMeet&&<div style={{color:muted,fontSize:13}}>Date will be inherited from meet</div>}
+        </div>
+      </div>
+
+      {!resultsMeet&&<div style={{color:muted,textAlign:"center",padding:60,fontSize:16}}>Select a meet above to begin entering results.</div>}
+
+      {resultsMeet&&(
+        <>
+          {FULL_MEET_ORDER.map((item,sectionIdx)=>{
+            if (item.type==="relay") {
+              const relay=item.name;
+              const legs=RELAY_LEGS[relay];
+              return (
+                <div key={relay} style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:22,marginBottom:16}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                    <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:18,fontWeight:700,color:accent,letterSpacing:1}}>{relay.toUpperCase()}</h3>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <span style={{color:muted,fontSize:12}}>Total time:</span>
+                      <input style={{...inputSmall,width:120}} placeholder="e.g. 1:42.50"
+                        value={relayTotals[relay]||""}
+                        onChange={e=>setRelayTotals(r=>({...r,[relay]:e.target.value}))}/>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {(relayGrid[relay]||[]).map((row,rowIdx)=>(
+                      <div key={rowIdx} style={{display:"flex",gap:10,alignItems:"center"}}>
+                        <div style={{width:60,color:accent,fontSize:12,fontWeight:700,fontFamily:"Barlow Condensed, sans-serif",letterSpacing:0.5,flexShrink:0}}>{legs[rowIdx]?.label||`Leg ${rowIdx+1}`}</div>
+                        <SwimmerInput
+                          cellKey={`relay-${relay}-${rowIdx}`}
+                          value={row.swimmerName}
+                          onChange={v=>updateRelayCell(relay,rowIdx,"swimmerName",v)}
+                        />
+                        <input style={{...inputSmall,width:110,flexShrink:0}} placeholder="Split time"
+                          value={row.time}
+                          onChange={e=>updateRelayCell(relay,rowIdx,"time",e.target.value)}/>
+                        {row.swimmerName&&!matchSwimmer(row.swimmerName)&&(
+                          <span style={{color:danger,fontSize:11,flexShrink:0}}>No match</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            // Individual event
+            const event=item.name;
+            return (
+              <div key={event} style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:22,marginBottom:16}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                  <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:18,fontWeight:700,color:text,letterSpacing:1}}>{event.toUpperCase()}</h3>
+                  <button onClick={()=>addRowToEvent(event)}
+                    style={{background:"transparent",border:`1px solid ${border}`,borderRadius:7,color:muted,padding:"4px 12px",fontSize:12,fontFamily:"Barlow Condensed, sans-serif",cursor:"pointer"}}>
+                    + Add Row
+                  </button>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {(resultsGrid[event]||[]).map((row,rowIdx)=>(
+                    <div key={rowIdx} style={{display:"flex",gap:10,alignItems:"center"}}>
+                      <div style={{width:24,color:muted,fontSize:12,textAlign:"center",flexShrink:0}}>{rowIdx+1}</div>
+                      <SwimmerInput
+                        cellKey={`${event}-${rowIdx}`}
+                        value={row.swimmerName}
+                        onChange={v=>updateResultsCell(event,rowIdx,"swimmerName",v)}
+                      />
+                      <input style={{...inputSmall,width:120,flexShrink:0}} placeholder="Time"
+                        value={row.time}
+                        onChange={e=>updateResultsCell(event,rowIdx,"time",e.target.value)}/>
+                      {row.swimmerName&&!matchSwimmer(row.swimmerName)&&(
+                        <span style={{color:danger,fontSize:11,flexShrink:0}}>No match</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          <div style={{display:"flex",justifyContent:"flex-end",marginTop:8,marginBottom:40}}>
+            <button style={{...btnPrimary,fontSize:17,padding:"14px 36px"}} onClick={handleSaveMeetResults}>
+              Save Meet Results
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Conflict dialog */}
+      {showConflicts&&(
+        <div style={overlay}>
+          <div style={{...modalBox,width:520,maxHeight:"80vh",overflowY:"auto"}}>
+            <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:8}}>EXISTING TIMES FOUND</h3>
+            <p style={{color:muted,fontSize:13,marginBottom:20}}>The following swimmers already have a time for this meet. Do you want to overwrite them?</p>
+            <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:20}}>
+              {showConflicts.map((c,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#0a1520",borderRadius:8}}>
+                  <div>
+                    <span style={{color:text,fontWeight:600,fontSize:14}}>{c.swimmerName}</span>
+                    <span style={{color:muted,fontSize:12,marginLeft:8}}>{c.event}</span>
+                  </div>
+                  <div style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
+                    <span style={{color:muted}}>{formatTime(c.oldTime)}</span>
+                    <span style={{color:muted}}>→</span>
+                    <span style={{color:accent,fontWeight:700}}>{formatTime(c.newTime)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button style={btnPrimary} onClick={()=>executeSave(pendingSave.allTimes,pendingSave.relayResultsToSave,true)}>
+                Overwrite All
+              </button>
+              <button style={{...btnSecondary}} onClick={()=>executeSave(pendingSave.allTimes,pendingSave.relayResultsToSave,false)}>
+                Skip Conflicts
+              </button>
+              <button style={btnSecondary} onClick={()=>{setShowConflicts(null);setPendingSave(null);}}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── SWIMMERS ──
+  const renderSwimmers=()=>{
+    if (selectedSwimmer){
+      const sw=swimmers.find(s=>s.id===selectedSwimmer);
+      const swTimes=swimmerTimesSorted(selectedSwimmer);
+      // Group: individual events, then relay splits grouped with base event
+      const individualEventNames=[...new Set(swTimes.filter(t=>!isRelaySplit(t.event)).map(t=>t.event))];
+      const relaySplitNames=[...new Set(swTimes.filter(t=>isRelaySplit(t.event)).map(t=>t.event))];
+
+      // Build event groups: base event + its relay splits
+      const eventGroups=individualEventNames.map(ev=>{
+        const variants=(RELAY_SPLIT_VARIANTS[ev]||[]).filter(v=>swTimes.some(t=>t.event===v));
+        return {baseEvent:ev,relayVariants:variants};
+      });
+      // Add relay splits that don't have a matching individual event (e.g. 100 Free (FR) if no 100 Free swum)
+      const coveredRelayEvents=eventGroups.flatMap(g=>g.relayVariants);
+      const uncoveredRelays=relaySplitNames.filter(r=>!coveredRelayEvents.includes(r));
+      if (uncoveredRelays.length) eventGroups.push({baseEvent:null,relayVariants:uncoveredRelays});
+
+      const allChartEvents=[...individualEventNames,...relaySplitNames];
+      const activeChartEvent=chartEvent&&allChartEvents.includes(chartEvent)?chartEvent:individualEventNames[0]||"";
+      const chartTimes=swTimes.filter(t=>t.event===activeChartEvent);
+      const chartData=chartTimes.map(t=>({meet:t.meet,time:t.time}));
+
+      const isEditing=editingSwimmer===sw.id;
       return (<div style={{animation:"fadeIn 0.2s ease"}}>
         <button style={{...btnSecondary,marginBottom:20}} onClick={()=>setSelectedSwimmer(null)}>← Back to Roster</button>
         <div style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:28,marginBottom:24}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-            <div>
-              <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:32,fontWeight:900,color:text}}>{sw?.name}</h2>
-              <div style={{color:muted,fontSize:14,marginTop:4}}>Age {sw?.age} · Specialty: {sw?.specialty}</div>
-            </div>
-            <button style={{...btnPrimary,padding:"8px 16px",fontSize:13}} onClick={()=>{setNewTime(t=>({...t,swimmerId:selectedSwimmer}));setShowAddTime(true);}}>+ LOG TIME</button>
-          </div>
-        </div>
-        {swEvents.map(event=>{
-          const eventTimes=swTimes.filter(t=>t.event===event).sort((a,b)=>new Date(a.date)-new Date(b.date));
-          const pb=Math.min(...eventTimes.map(t=>t.time));
-          return (<div key={event} style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:24,marginBottom:16}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:20,fontWeight:700,color:text}}>{event}</h3>
-              <div style={{display:"flex",gap:10,alignItems:"center"}}>
-                <span style={{color:muted,fontSize:13}}>PB:</span>
-                <span style={{color:gold,fontSize:20,fontFamily:"Barlow Condensed, sans-serif",fontWeight:700}}>{formatTime(pb)}</span>
-                <CutBadge cuts={cuts} event={event} time={pb}/>
+          {isEditing?(
+            <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"flex-end"}}>
+              <div style={{flex:"2 1 200px"}}>
+                <label style={{color:muted,fontSize:11,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:6}}>Name</label>
+                <input style={inputStyle} value={editSwimmerName} onChange={e=>setEditSwimmerName(e.target.value)} autoFocus/>
+              </div>
+              <div style={{flex:"1 1 120px"}}>
+                <label style={{color:muted,fontSize:11,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:6}}>Graduation Year</label>
+                <input style={inputStyle} placeholder="e.g. 2027" value={editSwimmerGradYear} onChange={e=>setEditSwimmerGradYear(e.target.value)} type="number"/>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button style={{...btnPrimary,padding:"10px 18px"}} onClick={saveSwimmerEdit}>Save</button>
+                <button style={{...btnSecondary,padding:"10px 14px"}} onClick={()=>setEditingSwimmer(null)}>Cancel</button>
               </div>
             </div>
-            <div style={{display:"flex",alignItems:"flex-end",gap:6,height:60,marginBottom:12}}>
-              {eventTimes.map(t=>{
-                const maxT=Math.max(...eventTimes.map(x=>x.time)),minT=Math.min(...eventTimes.map(x=>x.time));
-                const h=20+((t.time-minT)/((maxT-minT)||1))*40; const isPB=t.time===pb;
-                return <div key={t.id} title={`${formatTime(t.time)} – ${t.date} @ ${t.meet}`} style={{flex:1,height:h,background:isPB?gold:`linear-gradient(to top,${accent}66,${accent}22)`,borderRadius:"4px 4px 0 0",border:isPB?`1px solid ${gold}`:`1px solid ${accent}44`}}/>;
-              })}
+          ):(
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:6}}>
+                  <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:32,fontWeight:900,color:text}}>{sw?.name}</h2>
+                  <YearBadge gradYear={sw?.grad_year} style={{fontSize:14,padding:"3px 12px"}}/>
+                </div>
+                <div style={{color:muted,fontSize:13}}>Class of {sw?.grad_year} · {swTimes.length} times logged</div>
+              </div>
+              <div style={{display:"flex",gap:10}}>
+                <button style={{...btnSecondary,padding:"8px 16px",fontSize:13}} onClick={()=>{setEditingSwimmer(sw.id);setEditSwimmerName(sw.name);setEditSwimmerGradYear(sw.grad_year||"");}}>✎ Edit</button>
+                <button style={{...btnPrimary,padding:"8px 16px",fontSize:13}} onClick={()=>{setNewTime(t=>({...t,swimmer_id:selectedSwimmer}));setShowAddTime(true);}}>+ LOG TIME</button>
+              </div>
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {[...eventTimes].reverse().slice(0,6).map((t,i,arr)=>{
-                const prev=arr[i+1],delta=prev?t.time-prev.time:null;
-                return (<div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:"#0a1520",borderRadius:8}}>
-                  <span style={{color:muted,fontSize:13}}>{t.date} · {t.meet}</span>
-                  <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                    {delta!==null&&<ImprovementArrow delta={delta}/>}
-                    <span style={{color:t.time===pb?gold:text,fontFamily:"Barlow Condensed, sans-serif",fontSize:18,fontWeight:700}}>{formatTime(t.time)}</span>
+          )}
+        </div>
+
+        {/* Progress chart */}
+        {allChartEvents.length>0&&(
+          <div style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:24,marginBottom:24}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+              <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:20,fontWeight:700,color:text}}>PROGRESS CHART</h3>
+              <select value={activeChartEvent} onChange={e=>setChartEvent(e.target.value)} style={{...inputStyle,width:220}}>
+                {individualEventNames.map(ev=><option key={ev} value={ev}>{ev}</option>)}
+                {relaySplitNames.length>0&&<optgroup label="Relay Splits">
+                  {relaySplitNames.map(ev=><option key={ev} value={ev}>{ev}</option>)}
+                </optgroup>}
+              </select>
+            </div>
+            {chartData.length<2?(
+              <div style={{color:muted,fontSize:13,textAlign:"center",padding:24}}>Need at least 2 times to show a chart.</div>
+            ):(
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData} margin={{top:5,right:20,left:10,bottom:5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={border}/>
+                  <XAxis dataKey="meet" tick={{fill:muted,fontSize:12}} axisLine={{stroke:border}} tickLine={false}/>
+                  <YAxis tick={{fill:muted,fontSize:12}} axisLine={{stroke:border}} tickLine={false}
+                    tickFormatter={v=>formatTime(v)} domain={["dataMin - 2","dataMax + 2"]} reversed={true}/>
+                  <Tooltip contentStyle={{background:card,border:`1px solid ${border}`,borderRadius:8}}
+                    labelStyle={{color:accent,fontWeight:700,marginBottom:4}}
+                    formatter={(v)=>[formatTime(v),"Time"]}/>
+                  <Line type="monotone" dataKey="time" stroke={accent} strokeWidth={2.5}
+                    dot={{fill:accent,r:5,strokeWidth:0}} activeDot={{r:7,fill:gold}}/>
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        )}
+
+        {/* Individual events + grouped relay splits */}
+        {eventGroups.map((group,gi)=>{
+          const allGroupEvents=group.baseEvent?[group.baseEvent,...group.relayVariants]:group.relayVariants;
+          const groupTimes=swTimes.filter(t=>allGroupEvents.includes(t.event));
+          const indivTimes=group.baseEvent?swTimes.filter(t=>t.event===group.baseEvent):[];
+          const pb=indivTimes.length?Math.min(...indivTimes.map(t=>t.time)):null;
+          const sectionTitle=group.baseEvent||group.relayVariants[0];
+          return (
+            <div key={gi} style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:24,marginBottom:16}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:20,fontWeight:700,color:text}}>{sectionTitle}</h3>
+                {pb!==null&&(
+                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                    <span style={{color:muted,fontSize:13}}>PB:</span>
+                    <span style={{color:gold,fontSize:20,fontFamily:"Barlow Condensed, sans-serif",fontWeight:700}}>{formatTime(pb)}</span>
+                    <CutBadge cuts={cuts} event={group.baseEvent} time={pb}/>
                   </div>
-                </div>);
-              })}
+                )}
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {groupTimes.map((t,i,arr)=>{
+                  const sameEventPrev=arr.slice(0,i).filter(x=>x.event===t.event);
+                  const prev=sameEventPrev[sameEventPrev.length-1];
+                  const delta=prev?t.time-prev.time:null;
+                  const isRelay=isRelaySplit(t.event);
+                  const isPB=!isRelay&&t.time===pb;
+                  return (
+                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#0a1520",borderRadius:8,border:isPB?`1px solid ${gold}44`:"1px solid transparent"}}>
+                      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                        <span style={{color:muted,fontSize:12,minWidth:70}}>{formatDisplayDate(meetDateMap[t.meet])}</span>
+                        <span style={{color:muted,fontSize:12}}>{t.meet}</span>
+                        {isRelay&&<span style={{background:`${accent}22`,color:accent,fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:99,border:`1px solid ${accent}44`}}>{t.event.match(/\((.+)\)/)?.[1]}</span>}
+                      </div>
+                      <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                        {delta!==null&&<ImprovementArrow delta={delta}/>}
+                        {isPB&&<span style={{color:gold,fontSize:10,fontWeight:700,letterSpacing:1}}>PB</span>}
+                        {!isRelay&&<CutBadge cuts={cuts} event={t.event} time={t.time}/>}
+                        <span style={{color:isPB?gold:isRelay?accent:text,fontFamily:"Barlow Condensed, sans-serif",fontSize:18,fontWeight:700}}>{formatTime(t.time)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>);
+          );
         })}
-        {swEvents.length===0&&<div style={{color:muted,textAlign:"center",padding:40}}>No times logged yet.</div>}
+        {eventGroups.length===0&&<div style={{color:muted,textAlign:"center",padding:40}}>No times logged yet.</div>}
       </div>);
     }
+
+    // Roster
+    const eventsWithTimes=events.filter(ev=>times.some(t=>t.event===ev));
+    let filtered=[...swimmers];
+    if (rosterYearFilter!=="ALL") filtered=filtered.filter(sw=>gradYearToLabel(sw.grad_year)===rosterYearFilter);
+    if (rosterEventFilter) filtered=filtered.filter(sw=>times.some(t=>t.swimmer_id===sw.id&&t.event===rosterEventFilter));
+    if (rosterSort==="cuts") {
+      filtered.sort((a,b)=>{
+        const aC=cuts.filter(c=>{const pb=pbMap[`${a.id}-${c.event}`];return pb&&((c.cut_a&&pb<=c.cut_a)||(c.cut_b&&pb<=c.cut_b))}).length;
+        const bC=cuts.filter(c=>{const pb=pbMap[`${b.id}-${c.event}`];return pb&&((c.cut_a&&pb<=c.cut_a)||(c.cut_b&&pb<=c.cut_b))}).length;
+        return bC-aC;
+      });
+    } else {
+      filtered.sort((a,b)=>a.name.localeCompare(b.name));
+    }
+
     return (<div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-        <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text}}>ROSTER ({swimmers.length})</h2>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text}}>ROSTER ({filtered.length})</h2>
         <button style={btnPrimary} onClick={()=>setShowAddSwimmer(true)}>+ ADD SWIMMER</button>
       </div>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:20,alignItems:"center"}}>
+        <div style={{display:"flex",gap:4}}>
+          {["ALL","FR","SO","JR","SR"].map(yr=>(
+            <button key={yr} onClick={()=>setRosterYearFilter(yr)}
+              style={{background:rosterYearFilter===yr?`${accent}22`:"transparent",border:`1px solid ${rosterYearFilter===yr?accent:border}`,borderRadius:7,color:rosterYearFilter===yr?accent:muted,padding:"6px 14px",fontFamily:"Barlow Condensed, sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+              {yr}
+            </button>
+          ))}
+        </div>
+        <select value={rosterEventFilter} onChange={e=>setRosterEventFilter(e.target.value)} style={{...inputStyle,width:180,padding:"6px 12px",fontSize:13}}>
+          <option value="">All Events</option>
+          {eventsWithTimes.map(ev=><option key={ev} value={ev}>{ev}</option>)}
+        </select>
+        <select value={rosterSort} onChange={e=>setRosterSort(e.target.value)} style={{...inputStyle,width:160,padding:"6px 12px",fontSize:13}}>
+          <option value="cuts">Sort: Top Cuts</option>
+          <option value="name">Sort: Name A–Z</option>
+        </select>
+      </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
-        {swimmers.map(sw=>{
-          const swTimes=times.filter(t=>t.swimmerId===sw.id); const pbs=[...new Set(swTimes.map(t=>t.event))].length;
-          const swCuts=Object.keys(cuts).filter(ev=>{const pb=pbMap[`${sw.id}-${ev}`];return pb&&((cuts[ev].A&&pb<=cuts[ev].A)||(cuts[ev].B&&pb<=cuts[ev].B))}).length;
-          return (<div key={sw.id} onClick={()=>setSelectedSwimmer(sw.id)} style={{background:card,border:`1px solid ${border}`,borderLeft:`3px solid ${accent}`,borderRadius:14,padding:22,cursor:"pointer"}}>
-            <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:4}}>{sw.name}</div>
-            <div style={{color:muted,fontSize:13,marginBottom:14}}>Age {sw.age} · {sw.specialty}</div>
+        {filtered.map(sw=>{
+          const swTimes=times.filter(t=>t.swimmer_id===sw.id);
+          const pbs=[...new Set(swTimes.map(t=>t.event))].length;
+          const swCuts=cuts.filter(c=>{const pb=pbMap[`${sw.id}-${c.event}`];return pb&&((c.cut_a&&pb<=c.cut_a)||(c.cut_b&&pb<=c.cut_b))}).length;
+          return (<div key={sw.id} className="swimmer-card" onClick={()=>setSelectedSwimmer(sw.id)}
+            style={{background:card,border:`1px solid ${border}`,borderLeft:`3px solid ${accent}`,borderRadius:14,padding:22,cursor:"pointer"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+              <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text}}>{sw.name}</div>
+              <YearBadge gradYear={sw.grad_year}/>
+            </div>
+            <div style={{color:muted,fontSize:12,marginBottom:14}}>Class of {sw.grad_year}</div>
             <div style={{display:"flex",gap:16}}>
               {[{v:swTimes.length,l:"Times",c:accent},{v:pbs,l:"Events",c:accent},{v:swCuts,l:"Cuts",c:gold}].map(s=>(
                 <div key={s.l}><div style={{color:s.c,fontSize:20,fontFamily:"Barlow Condensed, sans-serif",fontWeight:700}}>{s.v}</div><div style={{color:muted,fontSize:11,textTransform:"uppercase"}}>{s.l}</div></div>
@@ -277,30 +1074,34 @@ export default function SwimTracker() {
             </div>
           </div>);
         })}
+        {filtered.length===0&&<div style={{color:muted,padding:40,gridColumn:"1/-1",textAlign:"center"}}>No swimmers match the current filters.</div>}
       </div>
     </div>);
   };
 
-  const MeetCard = ({ meet }) => {
+  // ── MEETS ──
+  const MeetCard=({meet})=>{
     const mt=times.filter(t=>t.meet===meet.name);
-    const uniq=[...new Set(mt.map(t=>t.swimmerId))].length;
-    const pbs=mt.filter(t=>pbMap[`${t.swimmerId}-${t.event}`]===t.time).length;
+    const uniq=[...new Set(mt.map(t=>t.swimmer_id))].length;
+    const pbs=mt.filter(t=>pbMap[`${t.swimmer_id}-${t.event}`]===t.time).length;
     const isEditing=editingMeet===meet.id;
-    if (isEditing) {
+    if (isEditing){
       const allSeasons=[...new Set(meets.map(m=>m.season).filter(Boolean))];
       return (
         <div style={{background:card,border:`2px solid ${accent}55`,borderRadius:14,padding:20,marginBottom:12,animation:"fadeIn 0.15s ease"}}>
           <div style={{display:"flex",gap:10,alignItems:"flex-start",flexWrap:"wrap"}}>
             <div style={{flex:"2 1 160px"}}>
               <label style={{color:muted,fontSize:11,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:5}}>Meet Name</label>
-              <input style={inputSmall} value={editMeetName} onChange={e=>setEditMeetName(e.target.value)}
-                onKeyDown={e=>{if(e.key==="Enter")saveMeetEdit();if(e.key==="Escape")setEditingMeet(null);}} autoFocus/>
-            </div>
-            <div style={{flex:"1 1 130px"}}>
-              <label style={{color:muted,fontSize:11,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:5}}>Season</label>
-              <input style={inputSmall} list="seasons-list" value={editMeetSeason} placeholder="e.g. 2024-25"
-                onChange={e=>setEditMeetSeason(e.target.value)}
+              <input style={inputSmall} value={editMeetName} onChange={e=>setEditMeetName(e.target.value)} autoFocus
                 onKeyDown={e=>{if(e.key==="Enter")saveMeetEdit();if(e.key==="Escape")setEditingMeet(null);}}/>
+            </div>
+            <div style={{flex:"1 1 120px"}}>
+              <label style={{color:muted,fontSize:11,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:5}}>Date</label>
+              <input style={inputSmall} type="date" value={editMeetDate} onChange={e=>setEditMeetDate(e.target.value)}/>
+            </div>
+            <div style={{flex:"1 1 120px"}}>
+              <label style={{color:muted,fontSize:11,textTransform:"uppercase",letterSpacing:0.5,display:"block",marginBottom:5}}>Season</label>
+              <input style={inputSmall} list="seasons-list" value={editMeetSeason} placeholder="e.g. 2024-25" onChange={e=>setEditMeetSeason(e.target.value)}/>
               <datalist id="seasons-list">{allSeasons.map(s=><option key={s} value={s}/>)}</datalist>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"flex-end",marginTop:"auto",paddingTop:20}}>
@@ -316,7 +1117,8 @@ export default function SwimTracker() {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:mt.length>0?14:0}}>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:20,fontWeight:800,color:text}}>{meet.name}</h3>
-            {meet.season&&<span style={{background:"#0f2040",border:`1px solid ${border}`,color:accent,fontSize:11,fontWeight:700,padding:"2px 10px",borderRadius:99,letterSpacing:0.5}}>{meet.season}</span>}
+            {meet.date&&<span style={{color:muted,fontSize:12}}>{formatDisplayDate(meet.date)}</span>}
+            {meet.season&&<span style={{background:"#0f2040",border:`1px solid ${border}`,color:accent,fontSize:11,fontWeight:700,padding:"2px 10px",borderRadius:99}}>{meet.season}</span>}
           </div>
           <div style={{display:"flex",alignItems:"center",gap:20}}>
             <div style={{display:"flex",gap:16}}>
@@ -327,14 +1129,14 @@ export default function SwimTracker() {
                 </div>
               ))}
             </div>
-            <button className="icon-btn" title="Edit meet" onClick={()=>{setEditingMeet(meet.id);setEditMeetName(meet.name);setEditMeetSeason(meet.season||"");}}
+            <button onClick={()=>{setEditingMeet(meet.id);setEditMeetName(meet.name);setEditMeetSeason(meet.season||"");setEditMeetDate(meet.date||"");}}
               style={{background:"transparent",border:`1px solid ${border}`,borderRadius:7,color:muted,width:32,height:32,cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>✎</button>
           </div>
         </div>
         {mt.length>0&&(
           <div style={{display:"flex",flexDirection:"column",gap:5}}>
             {mt.slice(0,5).map(t=>{
-              const sw=swimmers.find(s=>s.id===t.swimmerId); const isPB=pbMap[`${t.swimmerId}-${t.event}`]===t.time;
+              const sw=swimmers.find(s=>s.id===t.swimmer_id);const isPB=pbMap[`${t.swimmer_id}-${t.event}`]===t.time;
               return (<div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:"#0a1520",borderRadius:8}}>
                 <div style={{display:"flex",gap:10,alignItems:"center"}}><span style={{color:text,fontWeight:600,fontSize:13}}>{sw?.name}</span><span style={{color:muted,fontSize:12}}>{t.event}</span></div>
                 <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -351,8 +1153,8 @@ export default function SwimTracker() {
     );
   };
 
-  const renderMeets = () => {
-    const unassigned=meetsBySeason[""||""]||[];
+  const renderMeets=()=>{
+    const unassigned=meetsBySeason[""]||[];
     const namedSeasons=seasons.filter(s=>s!=="");
     return (
       <div>
@@ -394,7 +1196,7 @@ export default function SwimTracker() {
     );
   };
 
-  const renderLeaderboard = () => (
+  const renderLeaderboard=()=>(
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
         <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text}}>LEADERBOARD</h2>
@@ -407,8 +1209,11 @@ export default function SwimTracker() {
           <div key={entry.swimmer.id} style={{background:i===0?`linear-gradient(135deg,#2a1f00,#1a1500)`:card,border:`1px solid ${i===0?gold:border}`,borderRadius:14,padding:"18px 24px",display:"flex",alignItems:"center",gap:20,marginBottom:10}}>
             <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:42,fontWeight:900,color:i===0?gold:i===1?"#C0C0C0":i===2?"#CD7F32":muted,width:50,textAlign:"center",lineHeight:1}}>{i+1}</div>
             <div style={{flex:1}}>
-              <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text}}>{entry.swimmer.name}</div>
-              <div style={{color:muted,fontSize:13}}>Age {entry.swimmer.age} · {entry.swimmer.specialty}</div>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text}}>{entry.swimmer.name}</div>
+                <YearBadge gradYear={entry.swimmer.grad_year}/>
+              </div>
+              <div style={{color:muted,fontSize:13}}>Class of {entry.swimmer.grad_year}</div>
             </div>
             <div style={{textAlign:"right"}}>
               <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:32,fontWeight:900,color:i===0?gold:text}}>{formatTime(entry.time)}</div>
@@ -419,22 +1224,22 @@ export default function SwimTracker() {
     </div>
   );
 
-  const renderCuts = () => (
+  const renderCuts=()=>(
     <div>
       <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:800,color:text,marginBottom:24}}>QUALIFYING CUTS</h2>
-      {Object.keys(cuts).length===0&&<div style={{color:muted,textAlign:"center",padding:60}}>No qualifying cuts set. Add cuts in ⚙ Settings.</div>}
-      {Object.entries(cuts).map(([event,c])=>{
+      {cuts.length===0&&<div style={{color:muted,textAlign:"center",padding:60}}>No qualifying cuts set. Add cuts in ⚙ Settings.</div>}
+      {cuts.map(c=>{
         const qualifiers=swimmers.map(sw=>{
-          const pb=pbMap[`${sw.id}-${event}`]; if(!pb) return null;
-          const level=c.A&&pb<=c.A?"A":c.B&&pb<=c.B?"B":null;
+          const pb=pbMap[`${sw.id}-${c.event}`];if(!pb) return null;
+          const level=c.cut_a&&pb<=c.cut_a?"A":c.cut_b&&pb<=c.cut_b?"B":null;
           return level?{swimmer:sw,pb,level}:null;
         }).filter(Boolean).sort((a,b)=>a.pb-b.pb);
-        return (<div key={event} style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:24,marginBottom:16}}>
+        return (<div key={c.event} style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:24,marginBottom:16}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-            <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text}}>{event}</h3>
+            <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text}}>{c.event}</h3>
             <div style={{display:"flex",gap:16}}>
-              {c.A&&<span style={{color:muted,fontSize:13}}>A: <span style={{color:gold,fontWeight:700}}>{formatTime(c.A)}</span></span>}
-              {c.B&&<span style={{color:muted,fontSize:13}}>B: <span style={{color:"#C0C0C0",fontWeight:700}}>{formatTime(c.B)}</span></span>}
+              {c.cut_a&&<span style={{color:muted,fontSize:13}}>A: <span style={{color:gold,fontWeight:700}}>{formatTime(c.cut_a)}</span></span>}
+              {c.cut_b&&<span style={{color:muted,fontSize:13}}>B: <span style={{color:"#C0C0C0",fontWeight:700}}>{formatTime(c.cut_b)}</span></span>}
             </div>
           </div>
           {qualifiers.length===0?<div style={{color:muted,fontSize:14}}>No swimmers have achieved this cut yet.</div>:(
@@ -442,6 +1247,7 @@ export default function SwimTracker() {
               {qualifiers.map(q=>(
                 <div key={q.swimmer.id} style={{background:"#0a1520",border:`1px solid ${q.level==="A"?gold:"#C0C0C0"}`,borderRadius:10,padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
                   <span style={{color:text,fontWeight:600,fontSize:14}}>{q.swimmer.name}</span>
+                  <YearBadge gradYear={q.swimmer.grad_year}/>
                   <span style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:18,fontWeight:700,color:q.level==="A"?gold:"#C0C0C0"}}>{formatTime(q.pb)}</span>
                   <span style={{background:q.level==="A"?gold:"#C0C0C0",color:"#1a1a2e",padding:"1px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>{q.level} CUT</span>
                 </div>
@@ -453,19 +1259,19 @@ export default function SwimTracker() {
     </div>
   );
 
-  const renderSettings = () => (
+  const renderSettings=()=>(
     <div style={{display:"flex",flexDirection:"column",gap:32}}>
       <div style={{background:card,border:`1px solid ${border}`,borderRadius:14,padding:28}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
           <div>
             <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text}}>EVENTS</h2>
-            <p style={{color:muted,fontSize:13,marginTop:4}}>Events available when logging times.</p>
+            <p style={{color:muted,fontSize:13,marginTop:4}}>Events available for individual time logging.</p>
           </div>
           <button style={{...btnPrimary,padding:"8px 18px",fontSize:13}} onClick={()=>setShowAddEvent(true)}>+ ADD EVENT</button>
         </div>
         <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:6}}>
           {events.map(ev=>{
-            const cnt=times.filter(t=>t.event===ev).length; const hasCut=!!cuts[ev];
+            const cnt=times.filter(t=>t.event===ev).length;const hasCut=cuts.some(c=>c.event===ev);
             return (<div key={ev} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"#0a1520",borderRadius:10,gap:12}}>
               <div style={{flex:1}}>
                 <span style={{color:text,fontWeight:600,fontSize:15}}>{ev}</span>
@@ -474,7 +1280,7 @@ export default function SwimTracker() {
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {hasCut?<span style={{background:"#1a3050",color:accent,padding:"2px 10px",borderRadius:99,fontSize:12,fontWeight:600}}>Has cuts</span>:<span style={{color:"#1a3050",fontSize:12}}>No cuts</span>}
                 <button style={{background:"transparent",border:`1px solid ${accent}44`,borderRadius:7,color:accent,padding:"5px 12px",fontFamily:"Barlow Condensed, sans-serif",fontSize:12,cursor:"pointer"}}
-                  onClick={()=>{setShowEditCut(ev);const c=cuts[ev];setEditCutA(c?.A?formatTime(c.A).replace("s",""):"");setEditCutB(c?.B?formatTime(c.B).replace("s",""):"");}}>
+                  onClick={()=>{setShowEditCut(ev);const c=cuts.find(x=>x.event===ev);setEditCutA(c?.cut_a?formatTime(c.cut_a).replace("s",""):"");setEditCutB(c?.cut_b?formatTime(c.cut_b).replace("s",""):"");}}>
                   {hasCut?"Edit Cut":"Set Cut"}
                 </button>
                 <button style={btnDanger} onClick={()=>setShowConfirmDelete({type:"event",value:ev})}>Remove</button>
@@ -487,82 +1293,86 @@ export default function SwimTracker() {
         <h2 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:4}}>QUALIFYING CUTS</h2>
         <p style={{color:muted,fontSize:13,marginBottom:20}}>A and B standard times.</p>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {Object.entries(cuts).map(([ev,c])=>(
-            <div key={ev} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"#0a1520",borderRadius:10}}>
-              <span style={{color:text,fontWeight:600,fontSize:15,flex:1}}>{ev}</span>
+          {cuts.map(c=>(
+            <div key={c.event} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"#0a1520",borderRadius:10}}>
+              <span style={{color:text,fontWeight:600,fontSize:15,flex:1}}>{c.event}</span>
               <div style={{display:"flex",gap:20,alignItems:"center"}}>
-                {c.A&&<span style={{color:muted,fontSize:13}}>A: <span style={{color:gold,fontWeight:700,fontFamily:"Barlow Condensed, sans-serif",fontSize:16}}>{formatTime(c.A)}</span></span>}
-                {c.B&&<span style={{color:muted,fontSize:13}}>B: <span style={{color:"#C0C0C0",fontWeight:700,fontFamily:"Barlow Condensed, sans-serif",fontSize:16}}>{formatTime(c.B)}</span></span>}
+                {c.cut_a&&<span style={{color:muted,fontSize:13}}>A: <span style={{color:gold,fontWeight:700,fontFamily:"Barlow Condensed, sans-serif",fontSize:16}}>{formatTime(c.cut_a)}</span></span>}
+                {c.cut_b&&<span style={{color:muted,fontSize:13}}>B: <span style={{color:"#C0C0C0",fontWeight:700,fontFamily:"Barlow Condensed, sans-serif",fontSize:16}}>{formatTime(c.cut_b)}</span></span>}
                 <button style={{background:"transparent",border:`1px solid ${accent}44`,borderRadius:7,color:accent,padding:"5px 12px",fontFamily:"Barlow Condensed, sans-serif",fontSize:12,cursor:"pointer"}}
-                  onClick={()=>{setShowEditCut(ev);setEditCutA(c?.A?formatTime(c.A).replace("s",""):"");setEditCutB(c?.B?formatTime(c.B).replace("s",""):"");}}>Edit</button>
-                <button style={btnDanger} onClick={()=>setShowConfirmDelete({type:"cut",value:ev})}>Remove</button>
+                  onClick={()=>{setShowEditCut(c.event);setEditCutA(c.cut_a?formatTime(c.cut_a).replace("s",""):"");setEditCutB(c.cut_b?formatTime(c.cut_b).replace("s",""):"");}}>Edit</button>
+                <button style={btnDanger} onClick={()=>setShowConfirmDelete({type:"cut",value:c.event})}>Remove</button>
               </div>
             </div>
           ))}
-          {Object.keys(cuts).length===0&&<div style={{color:muted,fontSize:14,textAlign:"center",padding:24}}>No qualifying cuts set. Use "Set Cut" on any event above.</div>}
+          {cuts.length===0&&<div style={{color:muted,fontSize:14,textAlign:"center",padding:24}}>No qualifying cuts set. Use "Set Cut" on any event above.</div>}
         </div>
       </div>
     </div>
   );
 
+  const saveColors={saving:accent,saved:"#00e5a0",error:danger};
+  const saveLabels={saving:"Saving…",saved:"✓ Saved",error:"Save failed"};
+
   return (
     <><style>{css}</style>
     <div style={{background:bg,minHeight:"100vh",fontFamily:"Barlow, sans-serif",color:text}}>
       <div style={{background:`linear-gradient(180deg,#0a1830 0%,${bg} 100%)`,borderBottom:`1px solid ${border}`,padding:"0 24px"}}>
-        <div style={{maxWidth:1160,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
           <div style={{padding:"14px 0"}}>
             <div style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:24,fontWeight:900,color:text,letterSpacing:2,display:"flex",alignItems:"center",gap:8}}>
               <span style={{color:accent}}>⬡</span> AQUA TRACKER
             </div>
             <div style={{color:muted,fontSize:11,letterSpacing:2,textTransform:"uppercase"}}>Peabody Swim Team</div>
           </div>
-          <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-            {tabDefs.map(t=>(
-              <button key={t.id} onClick={()=>{setTab(t.id);setSelectedSwimmer(null);setEditingMeet(null);}}
-                style={{background:tab===t.id?`linear-gradient(135deg,${accent}22,${accent}11)`:"transparent",border:tab===t.id?`1px solid ${accent}66`:"1px solid transparent",color:tab===t.id?accent:muted,padding:"8px 12px",borderRadius:8,fontFamily:"Barlow Condensed, sans-serif",fontSize:13,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>
-                {t.label.toUpperCase()}
-              </button>
-            ))}
+          <div style={{display:"flex",alignItems:"center",gap:16}}>
+            {saveStatus!=="idle"&&<div style={{fontSize:12,color:saveColors[saveStatus],fontFamily:"Barlow, sans-serif"}}>{saveLabels[saveStatus]}</div>}
+            <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
+              {tabDefs.map(t=>(
+                <button key={t.id} onClick={()=>{setTab(t.id);setSelectedSwimmer(null);setEditingMeet(null);}}
+                  style={{background:tab===t.id?`linear-gradient(135deg,${accent}22,${accent}11)`:"transparent",border:tab===t.id?`1px solid ${accent}66`:"1px solid transparent",color:tab===t.id?accent:muted,padding:"8px 12px",borderRadius:8,fontFamily:"Barlow Condensed, sans-serif",fontSize:13,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>
+                  {t.label.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{maxWidth:1160,margin:"0 auto",padding:"24px"}}>
+      <div style={{maxWidth:1200,margin:"0 auto",padding:"24px"}}>
         {tab==="dashboard"&&renderDashboard()}
         {tab==="swimmers"&&renderSwimmers()}
         {tab==="meets"&&renderMeets()}
+        {tab==="results"&&renderResults()}
         {tab==="leaderboard"&&renderLeaderboard()}
         {tab==="cuts"&&renderCuts()}
         {tab==="settings"&&renderSettings()}
       </div>
 
-      {showAddTime&&(<div style={modalOverlay} onClick={e=>e.target===e.currentTarget&&setShowAddTime(false)}>
+      {showAddTime&&(<div style={overlay} onClick={e=>e.target===e.currentTarget&&setShowAddTime(false)}>
         <div style={modalBox}>
           <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:20}}>LOG TIME</h3>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
-            <select style={inputStyle} value={newTime.swimmerId} onChange={e=>setNewTime(t=>({...t,swimmerId:e.target.value}))}>
+            <select style={inputStyle} value={newTime.swimmer_id} onChange={e=>setNewTime(t=>({...t,swimmer_id:e.target.value}))}>
               <option value="">Select Swimmer</option>
               {swimmers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
             <select style={inputStyle} value={newTime.event} onChange={e=>setNewTime(t=>({...t,event:e.target.value}))}>
               <option value="">Select Event</option>
-              {events.map(e=><option key={e} value={e}>{e}</option>)}
+              {[...INDIVIDUAL_EVENTS].map(e=><option key={e} value={e}>{e}</option>)}
             </select>
             <input style={inputStyle} placeholder="Time (e.g. 56.23 or 1:02.45)" value={newTime.time} onChange={e=>setNewTime(t=>({...t,time:e.target.value}))}/>
-            <input style={inputStyle} type="date" value={newTime.date} onChange={e=>setNewTime(t=>({...t,date:e.target.value}))}/>
             <select style={inputStyle} value={newTime.meet} onChange={e=>setNewTime(t=>({...t,meet:e.target.value}))}>
               <option value="">Select Meet</option>
-              {seasons.filter(s=>s!=="").map(s=>(
-                <optgroup key={s} label={s}>
-                  {(meetsBySeason[s]||[]).map(m=><option key={m.id} value={m.name}>{m.name}</option>)}
-                </optgroup>
+              {[...meets].sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(m=>(
+                <option key={m.id} value={m.name}>{m.name}{m.date?` (${formatDisplayDate(m.date)})`:""}</option>
               ))}
-              {(meetsBySeason[""]||[]).length>0&&(
-                <optgroup label="No Season">
-                  {(meetsBySeason[""]||[]).map(m=><option key={m.id} value={m.name}>{m.name}</option>)}
-                </optgroup>
-              )}
             </select>
+            {newTime.meet&&meetDateMap[newTime.meet]&&(
+              <div style={{color:muted,fontSize:12,padding:"6px 12px",background:"#0a1520",borderRadius:8}}>
+                Date: <span style={{color:accent}}>{formatDisplayDate(meetDateMap[newTime.meet])}</span>
+              </div>
+            )}
             <div style={{display:"flex",gap:10,marginTop:8}}>
               <button style={btnPrimary} onClick={addTime}>Save Time</button>
               <button style={btnSecondary} onClick={()=>setShowAddTime(false)}>Cancel</button>
@@ -571,15 +1381,15 @@ export default function SwimTracker() {
         </div>
       </div>)}
 
-      {showAddSwimmer&&(<div style={modalOverlay} onClick={e=>e.target===e.currentTarget&&setShowAddSwimmer(false)}>
+      {showAddSwimmer&&(<div style={overlay} onClick={e=>e.target===e.currentTarget&&setShowAddSwimmer(false)}>
         <div style={modalBox}>
           <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:20}}>ADD SWIMMER</h3>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             <input style={inputStyle} placeholder="Full Name" value={newSwimmer.name} onChange={e=>setNewSwimmer(s=>({...s,name:e.target.value}))}/>
-            <input style={inputStyle} placeholder="Age" type="number" value={newSwimmer.age} onChange={e=>setNewSwimmer(s=>({...s,age:e.target.value}))}/>
-            <select style={inputStyle} value={newSwimmer.specialty} onChange={e=>setNewSwimmer(s=>({...s,specialty:e.target.value}))}>
-              {["Freestyle","Backstroke","Breaststroke","Butterfly","IM"].map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
+            <div>
+              <input style={inputStyle} placeholder="Graduation Year (e.g. 2027)" type="number" value={newSwimmer.grad_year} onChange={e=>setNewSwimmer(s=>({...s,grad_year:e.target.value}))}/>
+              {newSwimmer.grad_year&&<div style={{color:muted,fontSize:12,marginTop:5}}>Year: <span style={{color:accent,fontWeight:700}}>{gradYearToLabel(Number(newSwimmer.grad_year))}</span></div>}
+            </div>
             <div style={{display:"flex",gap:10,marginTop:8}}>
               <button style={btnPrimary} onClick={addSwimmer}>Add Swimmer</button>
               <button style={btnSecondary} onClick={()=>setShowAddSwimmer(false)}>Cancel</button>
@@ -588,7 +1398,7 @@ export default function SwimTracker() {
         </div>
       </div>)}
 
-      {showAddMeet&&(<div style={modalOverlay} onClick={e=>e.target===e.currentTarget&&setShowAddMeet(false)}>
+      {showAddMeet&&(<div style={overlay} onClick={e=>e.target===e.currentTarget&&setShowAddMeet(false)}>
         <div style={modalBox}>
           <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:20}}>ADD MEET</h3>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -597,10 +1407,13 @@ export default function SwimTracker() {
               <input style={inputStyle} placeholder="e.g. Gloucester" value={newMeet.name} onChange={e=>setNewMeet(m=>({...m,name:e.target.value}))}/>
             </div>
             <div>
+              <label style={{color:muted,fontSize:12,display:"block",marginBottom:6}}>Date</label>
+              <input style={inputStyle} type="date" value={newMeet.date} onChange={e=>setNewMeet(m=>({...m,date:e.target.value}))}/>
+            </div>
+            <div>
               <label style={{color:muted,fontSize:12,display:"block",marginBottom:6}}>Season <span style={{color:"#2a4060"}}>(optional)</span></label>
               <input style={inputStyle} list="add-seasons-list" placeholder="e.g. 2024-25" value={newMeet.season} onChange={e=>setNewMeet(m=>({...m,season:e.target.value}))}/>
               <datalist id="add-seasons-list">{[...new Set(meets.map(m=>m.season).filter(Boolean))].map(s=><option key={s} value={s}/>)}</datalist>
-              <div style={{color:muted,fontSize:12,marginTop:5}}>Meets with the same season label are grouped together.</div>
             </div>
             <div style={{display:"flex",gap:10,marginTop:8}}>
               <button style={btnPrimary} onClick={addMeet}>Add Meet</button>
@@ -610,12 +1423,11 @@ export default function SwimTracker() {
         </div>
       </div>)}
 
-      {showAddEvent&&(<div style={modalOverlay} onClick={e=>e.target===e.currentTarget&&setShowAddEvent(false)}>
+      {showAddEvent&&(<div style={overlay} onClick={e=>e.target===e.currentTarget&&setShowAddEvent(false)}>
         <div style={modalBox}>
           <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:8}}>ADD EVENT</h3>
-          <p style={{color:muted,fontSize:13,marginBottom:20}}>e.g. "200y Backstroke" or "4x100y Relay"</p>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
-            <input style={inputStyle} placeholder="Event name" value={newEvent} onChange={e=>setNewEvent(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addEvent()}/>
+            <input style={inputStyle} placeholder="e.g. 200 Backstroke" value={newEvent} onChange={e=>setNewEvent(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addEvent()}/>
             <div style={{display:"flex",gap:10,marginTop:8}}>
               <button style={btnPrimary} onClick={addEvent}>Add Event</button>
               <button style={btnSecondary} onClick={()=>{setShowAddEvent(false);setNewEvent("");}}>Cancel</button>
@@ -624,19 +1436,19 @@ export default function SwimTracker() {
         </div>
       </div>)}
 
-      {showEditCut&&(<div style={modalOverlay} onClick={e=>e.target===e.currentTarget&&setShowEditCut(null)}>
+      {showEditCut&&(<div style={overlay} onClick={e=>e.target===e.currentTarget&&setShowEditCut(null)}>
         <div style={modalBox}>
           <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:4}}>SET QUALIFYING CUTS</h3>
           <p style={{color:accent,fontSize:14,fontWeight:600,marginBottom:4}}>{showEditCut}</p>
-          <p style={{color:muted,fontSize:13,marginBottom:20}}>Enter as seconds (56.23) or min:sec (1:02.45). Leave blank to remove that level.</p>
+          <p style={{color:muted,fontSize:13,marginBottom:20}}>Enter as seconds (56.23) or min:sec (1:02.45). Leave blank to remove.</p>
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
             <div>
               <label style={{color:gold,fontSize:13,fontWeight:700,letterSpacing:1,display:"block",marginBottom:6}}>A STANDARD</label>
-              <input style={inputStyle} placeholder="e.g. 57.50 or 1:02.45" value={editCutA} onChange={e=>setEditCutA(e.target.value)}/>
+              <input style={inputStyle} placeholder="e.g. 57.50" value={editCutA} onChange={e=>setEditCutA(e.target.value)}/>
             </div>
             <div>
               <label style={{color:"#C0C0C0",fontSize:13,fontWeight:700,letterSpacing:1,display:"block",marginBottom:6}}>B STANDARD</label>
-              <input style={inputStyle} placeholder="e.g. 62.00 or 1:08.00" value={editCutB} onChange={e=>setEditCutB(e.target.value)}/>
+              <input style={inputStyle} placeholder="e.g. 62.00" value={editCutB} onChange={e=>setEditCutB(e.target.value)}/>
             </div>
             <div style={{display:"flex",gap:10,marginTop:8}}>
               <button style={btnPrimary} onClick={()=>saveCut(showEditCut)}>Save Cuts</button>
@@ -646,7 +1458,7 @@ export default function SwimTracker() {
         </div>
       </div>)}
 
-      {showConfirmDelete&&(<div style={modalOverlay} onClick={e=>e.target===e.currentTarget&&setShowConfirmDelete(null)}>
+      {showConfirmDelete&&(<div style={overlay} onClick={e=>e.target===e.currentTarget&&setShowConfirmDelete(null)}>
         <div style={{...modalBox,width:380}}>
           <h3 style={{fontFamily:"Barlow Condensed, sans-serif",fontSize:22,fontWeight:800,color:text,marginBottom:12}}>
             {showConfirmDelete.type==="event"?"REMOVE EVENT?":"REMOVE CUT?"}
