@@ -1484,3 +1484,9 @@ export default function SwimTracker() {
               Yes, Remove
             </button>
             <button style={btnSecondary} onClick={()=>setShowConfirmDelete(null)}>Cancel</button>
+          </div>
+        </div>
+      </div>)}
+    </div></>
+  );
+}
