@@ -197,6 +197,42 @@ function formatDisplayDate(d) {
   const [y,m,day]=d.split("-");
   return `${m}/${day}/${y}`;
 }
+
+// ── SWIMMER AUTOCOMPLETE — defined outside main component so it never remounts ──
+function SwimmerInput({cellKey, value, onChange, onSelectSuggestion, swimmers, swimmerDropdown, setSwimmerDropdown}) {
+  const suggestions = value.trim().length >= 2
+    ? swimmers.filter(s => s.name.toLowerCase().includes(value.toLowerCase())).slice(0, 6)
+    : [];
+  const showDrop = swimmerDropdown[cellKey] && suggestions.length > 0;
+  const inputSmall = {background:"#0a1520",border:"1px solid #1a3050",borderRadius:6,color:"#e0eaf8",padding:"7px 10px",fontSize:13,fontFamily:"Barlow, sans-serif",width:"100%"};
+  const card = "#0d1a2e"; const border = "#1a3050"; const text = "#e0eaf8"; const muted = "#4a7090";
+  return (
+    <div style={{position:"relative",flex:1}}>
+      <input
+        style={inputSmall}
+        placeholder="Swimmer name…"
+        value={value}
+        onChange={e=>{onChange(e.target.value);setSwimmerDropdown(d=>({...d,[cellKey]:true}));}}
+        onBlur={()=>setTimeout(()=>setSwimmerDropdown(d=>({...d,[cellKey]:false})),150)}
+        onFocus={()=>setSwimmerDropdown(d=>({...d,[cellKey]:true}))}
+      />
+      {showDrop&&(
+        <div style={{position:"absolute",top:"100%",left:0,right:0,background:card,border:`1px solid ${border}`,borderRadius:8,zIndex:50,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",marginTop:2}}>
+          {suggestions.map(s=>(
+            <div key={s.id}
+              onMouseDown={()=>{onSelectSuggestion(s.name);setSwimmerDropdown(d=>({...d,[cellKey]:false}));}}
+              style={{padding:"8px 12px",color:text,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:8,background:"transparent"}}
+              onMouseEnter={e=>e.currentTarget.style.background="#1a3050"}
+              onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              {s.name}<YearBadge gradYear={s.grad_year}/>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function isRelaySplit(eventName) {
   return eventName.includes("(MR)") || eventName.includes("(FR)");
 }
@@ -525,11 +561,6 @@ export default function SwimTracker() {
     return swimmers.find(s=>s.name.toLowerCase()===name.toLowerCase().trim())||null;
   };
 
-  const getSwimmerSuggestions=(query)=>{
-    if (!query.trim()||query.length<2) return [];
-    return swimmers.filter(s=>s.name.toLowerCase().includes(query.toLowerCase())).slice(0,6);
-  };
-
   const prepareSaveData=()=>{
     const meet=meets.find(m=>m.name===resultsMeet);
     if (!meet) return {timesToSave:[],relayTimesToSave:[],relayResultsToSave:[]};
@@ -705,35 +736,6 @@ export default function SwimTracker() {
     );
   };
 
-  // ── SWIMMER AUTOCOMPLETE INPUT ──
-  const SwimmerInput=({cellKey,value,onChange})=>{
-    const suggestions=getSwimmerSuggestions(value);
-    const showDrop=swimmerDropdown[cellKey]&&suggestions.length>0;
-    return (
-      <div style={{position:"relative" as const,flex:1}}>
-        <input
-          style={{...inputSmall,borderRadius:6}}
-          placeholder="Swimmer name…"
-          value={value}
-          onChange={e=>{onChange(e.target.value);setSwimmerDropdown(d=>({...d,[cellKey]:true}));}}
-          onBlur={()=>setTimeout(()=>setSwimmerDropdown(d=>({...d,[cellKey]:false})),150)}
-          onFocus={()=>setSwimmerDropdown(d=>({...d,[cellKey]:true}))}
-        />
-        {showDrop&&(
-          <div style={{position:"absolute" as const,top:"100%",left:0,right:0,background:card,border:`1px solid ${border}`,borderRadius:8,zIndex:50,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",marginTop:2}}>
-            {suggestions.map(s=>(
-              <div key={s.id} className="suggestion-item"
-                onMouseDown={()=>{onChange(s.name);setSwimmerDropdown(d=>({...d,[cellKey]:false}));}}
-                style={{padding:"8px 12px",color:text,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
-                {s.name}<YearBadge gradYear={s.grad_year}/>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // ── ENTER RESULTS ──
   const renderResults=()=>(
     <div>
@@ -782,6 +784,10 @@ export default function SwimTracker() {
                           cellKey={`relay-${relay}-${rowIdx}`}
                           value={row.swimmerName}
                           onChange={v=>updateRelayCell(relay,rowIdx,"swimmerName",v)}
+                          onSelectSuggestion={v=>updateRelayCell(relay,rowIdx,"swimmerName",v)}
+                          swimmers={swimmers}
+                          swimmerDropdown={swimmerDropdown}
+                          setSwimmerDropdown={setSwimmerDropdown}
                         />
                         <input style={{...inputSmall,width:110,flexShrink:0}} placeholder="Split time"
                           value={row.time}
@@ -815,6 +821,10 @@ export default function SwimTracker() {
                         cellKey={`${event}-${rowIdx}`}
                         value={row.swimmerName}
                         onChange={v=>updateResultsCell(event,rowIdx,"swimmerName",v)}
+                        onSelectSuggestion={v=>updateResultsCell(event,rowIdx,"swimmerName",v)}
+                        swimmers={swimmers}
+                        swimmerDropdown={swimmerDropdown}
+                        setSwimmerDropdown={setSwimmerDropdown}
                       />
                       <input style={{...inputSmall,width:120,flexShrink:0}} placeholder="Time"
                         value={row.time}
@@ -1474,9 +1484,3 @@ export default function SwimTracker() {
               Yes, Remove
             </button>
             <button style={btnSecondary} onClick={()=>setShowConfirmDelete(null)}>Cancel</button>
-          </div>
-        </div>
-      </div>)}
-    </div></>
-  );
-}
